@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #FF9F00;
+  --color-primary-hover: #E68A00;
+  --color-text-main: #333333;
+  --color-text-secondary: #666666;
+  --color-bg-light: #F5F5F5;
+  --color-success: #2ECC71;
+  --color-danger: #E74C3C;
+  --color-warning: #F39C12;
+  --color-bg-page: #FFFFFF;
+  
+  --font-sans: "Microsoft YaHei", "PingFang SC", sans-serif;
+  
+  --spacing-page: 24px;
+  --spacing-module: 20px;
+  --spacing-element: 8px;
+  --spacing-element-large: 16px;
+  --spacing-inner: 16px;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-bg-page text-text-main;
+  }
+}
+
+@layer components {
+  /* 按钮规范 */
+  .btn-primary {
+    @apply min-w-[120px] h-[44px] px-inner rounded-[8px] bg-primary text-white text-[16px] leading-[1] font-[500] transition-colors duration-200 hover:bg-primary-hover cursor-pointer border-none flex items-center justify-center;
+  }
+
+  .btn-secondary {
+    @apply min-w-[100px] h-[40px] px-inner rounded-[8px] bg-bg-light text-text-main text-[16px] leading-[1] font-[500] transition-colors duration-200 hover:bg-[#EEEEEE] cursor-pointer border-none flex items-center justify-center;
+  }
+
+  .btn-text-danger {
+    @apply text-danger hover:brightness-90 text-[16px] leading-[1] font-[500] cursor-pointer transition-all duration-200 bg-transparent border-none p-0;
+  }
+
+  .btn-text-primary {
+    @apply text-primary hover:brightness-90 text-[16px] leading-[1] font-[500] cursor-pointer transition-all duration-200 bg-transparent border-none p-0;
+  }
+
+  /* 字体层级 */
+  .title {
+    @apply text-[20px] leading-[1.2] font-[600] text-text-main;
+  }
+
+  .text-main {
+    @apply text-[16px] leading-[1.4] font-[400] text-text-main;
+  }
+
+  .text-desc {
+    @apply text-[14px] leading-[1.4] font-[400] text-text-secondary;
+  }
+
+  .timer {
+    @apply text-[48px] leading-[1] font-[700] text-primary;
+  }
+
+  /* 容器规范 */
+  .page-container {
+    @apply w-full max-w-[1440px] mx-auto p-page min-h-screen flex flex-col gap-module;
+  }
+
+  .card {
+    @apply bg-bg-light p-inner rounded-[8px] flex flex-col gap-element;
+  }
+
+  /* 旧样式保留/更新 */
+  .nav-tab {
+    @apply px-5 py-2 text-[16px] font-[500] rounded-[8px] transition-all duration-200 text-text-secondary hover:bg-bg-light no-underline;
+  }
+  .nav-tab-active {
+    @apply bg-primary text-white hover:bg-primary-hover;
+  }
+}
