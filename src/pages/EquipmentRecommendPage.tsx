@@ -1,14 +1,24 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { HeroSelect } from '../components/business/HeroSelect';
-import { SceneFilter } from '../components/business/SceneFilter';
 import { EquipmentList } from '../components/business/EquipmentList';
 import { CopyBtn } from '../components/atomic/CopyBtn';
 import { Button } from '../components/atomic/Button';
-import equipmentData from '../mock/equipment/equipmentList.json';
+import { heroList } from '../mock/hero/index';
+import heroDetailsData from '../mock/hero/hero_details.json';
 import summonerSkills from '../mock/equipment/summonerSkills.json';
 import toolsData from '../mock/equipment/tools.json';
 import toolsDetailData from '../mock/equipment/tools_detail.json';
+
+const CATEGORIES = [
+  { id: 0, name: '全部' },
+  { id: 1, name: '攻击' },
+  { id: 2, name: '法术' },
+  { id: 3, name: '防御' },
+  { id: 4, name: '移动' },
+  { id: 5, name: '打野' },
+  { id: 7, name: '游走' },
+];
 
 interface Equipment {
   id: string;
@@ -16,44 +26,96 @@ interface Equipment {
   icon: string;
   desc: string;
 }
-interface EquipmentRecommendation {
-  heroId: number;
-  heroName: string;
-  scene: string;
-  equipmentList: Equipment[];
+
+interface EquipmentSet {
+  items: Equipment[];
+  tips: string;
 }
+
+// 计算默认选中的英雄 ID（hero_details.json 中的第一条数据）
+const getDefaultHeroId = () => {
+  const firstHeroName = (heroDetailsData as any[])[0]?.name;
+  if (!firstHeroName) return 1;
+  const allHeroes = Object.values(heroList).flatMap(list => list);
+  const foundHero = allHeroes.find(h => h.heroName === firstHeroName);
+  return foundHero?.id || 1;
+};
 
 export default function EquipmentRecommendPage() {
   const [searchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as 'equipment' | 'skills' | 'tools') || 'equipment';
-  const [selectedHeroId, setSelectedHeroId] = useState<number>(1); // Default to Arthur
-  const [selectedScene, setSelectedScene] = useState<string>('常规');
-  const [currentEquipment, setCurrentEquipment] = useState<Equipment[]>([]);
+  const [selectedHeroId, setSelectedHeroId] = useState<number>(getDefaultHeroId()); 
+  const [equipmentSets, setEquipmentSets] = useState<EquipmentSet[]>([]);
   const [toolSearch, setToolSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState(0);
+
+  // 获取英雄名称的辅助函数
+  const getHeroNameById = (id: number) => {
+    const allHeroes = Object.values(heroList).flatMap(list => list);
+    const hero = allHeroes.find(h => h.id === id);
+    return hero?.heroName || '';
+  };
+
+  // 将装备名称列表转换为 Equipment 对象列表
+  const mapItemNamesToEquipment = (itemNames: string[]) => {
+    return itemNames.map((name, index) => {
+      const tool = toolsData.find(t => t.tool === name);
+      const detail = (toolsDetailData as any[]).find(d => d.item_name === name);
+      return {
+        id: detail?.item_id?.toString() || `${name}-${index}`,
+        name: name,
+        icon: tool?.tool_src || '',
+        desc: detail?.des1?.replace(/<[^>]+>/g, '') || '暂无描述'
+      };
+    });
+  };
 
   // 监听英雄或场景变化，更新出装方案
   useEffect(() => {
-    const recommendation = (equipmentData as EquipmentRecommendation[]).find(
-      item => item.heroId === selectedHeroId && item.scene === selectedScene
-    );
-
-    if (recommendation) {
-      setCurrentEquipment(recommendation.equipmentList);
+    const heroName = getHeroNameById(selectedHeroId);
+    
+    // 优先从 hero_details.json 获取数据
+    const heroDetail = (heroDetailsData as any[]).find(h => h.name === heroName);
+    
+    if (heroDetail && heroDetail.equipment && heroDetail.equipment.length > 0) {
+      const sets = heroDetail.equipment.map((set: any) => ({
+        items: mapItemNamesToEquipment(set.items),
+        tips: set.tips || ''
+      }));
+      setEquipmentSets(sets);
     } else {
-      // Fallback if no specific recommendation found
-      setCurrentEquipment([]);
+      setEquipmentSets([]);
     }
-  }, [selectedHeroId, selectedScene]);
+  }, [selectedHeroId]);
 
   const copyText = useMemo(() => {
-    return currentEquipment.map((e, i) => `${i + 1}. ${e.name}`).join('\n');
-  }, [currentEquipment]);
+    if (equipmentSets.length === 0) return '';
+    const heroName = getHeroNameById(selectedHeroId);
+    let text = `【${heroName}】智能推荐出装方案：\n\n`;
+    
+    equipmentSets.forEach((set, setIdx) => {
+      const itemsText = set.items.map((e, i) => `${i + 1}.${e.name}`).join(' -> ');
+      text += `方案${setIdx + 1}：${itemsText}\n`;
+      if (set.tips) {
+        text += `思路：${set.tips.replace('Tips：', '')}\n`;
+      }
+      text += '\n';
+    });
+    
+    return text.trim();
+  }, [equipmentSets, selectedHeroId]);
 
   const filteredTools = useMemo(() => {
-    return toolsData.filter(tool => 
-      tool.tool.toLowerCase().includes(toolSearch.toLowerCase())
-    );
-  }, [toolSearch]);
+    return toolsData.filter(tool => {
+      const matchesSearch = tool.tool.toLowerCase().includes(toolSearch.toLowerCase());
+      if (!matchesSearch) return false;
+      
+      if (activeCategory === 0) return true;
+      
+      const detail = (toolsDetailData as any[]).find(d => d.item_name === tool.tool);
+      return detail?.item_type === activeCategory;
+    });
+  }, [toolSearch, activeCategory]);
 
   // 获取道具详细信息的辅助函数
   const getToolDetail = (name: string) => {
@@ -66,22 +128,6 @@ export default function EquipmentRecommendPage() {
         found: true
       };
     }
-    
-    // 如果 tools_detail.json 没找到，尝试从 equipmentList.json 找描述
-    let desc = '这是王者峡谷的一件神秘道具。';
-    for (const hero of equipmentData as EquipmentRecommendation[]) {
-      const found = hero.equipmentList.find(e => e.name === name);
-      if (found) {
-        desc = found.desc;
-        break;
-      }
-    }
-    return {
-      price: '???',
-      stats: `<p>${desc}</p>`,
-      passive: '',
-      found: false
-    };
   };
 
   return (
@@ -94,35 +140,56 @@ export default function EquipmentRecommendPage() {
               <label className='text-desc text-sm font-bold min-w-14 mr-1'>英雄名称</label>
               <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
             </div>
-            <div className="w-full md:w-auto">
-              <SceneFilter activeScene={selectedScene} onSceneChange={setSelectedScene} />
-            </div>
           </div>
 
           {/* 主体展示区: calc(100% - 80px) */}
-          <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-            <div className="max-w-2xl mx-auto flex flex-col gap-8 pb-10">
-              {currentEquipment.length > 0 ? (
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-hide">
+            <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10">
+              {equipmentSets.length > 0 ? (
                 <>
-                  <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center justify-between mb-4 px-2">
-                      <h3 className="title">推荐出装顺序</h3>
-                      <span className="text-xs text-text-secondary">点击装备可进行替换</span>
-                    </div>
-                    <EquipmentList
-                      list={currentEquipment}
-                      onUpdateList={setCurrentEquipment}
-                    />
-                  </section>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                    {equipmentSets.map((set, setIdx) => (
+                      <div key={setIdx} className="flex flex-col gap-6 p-5 md:p-6 bg-bg-card rounded-3xl border border-border-light shadow-sm hover:shadow-md transition-shadow animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${setIdx * 150}ms` }}>
+                        <section>
+                          <div className="flex items-center justify-between mb-4 px-2">
+                            <h3 className="text-primary font-bold flex items-center gap-2">
+                              <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-sm">
+                                {setIdx + 1}
+                              </span>
+                              推荐出装方案
+                            </h3>
+                            <span className="text-[10px] md:text-xs text-text-secondary bg-bg-page px-2 py-1 rounded-full border border-border-light">
+                              点击装备可进行替换
+                            </span>
+                          </div>
+                          <EquipmentList
+                            list={set.items}
+                            onUpdateList={(newList) => {
+                              const newSets = [...equipmentSets];
+                              newSets[setIdx] = { ...newSets[setIdx], items: newList };
+                              setEquipmentSets(newSets);
+                            }}
+                          />
+                        </section>
 
-                  <section className="bg-bg-card p-6 rounded-3xl shadow-md border-2 border-primary/10 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
-                    <h4 className="title text-center mb-6">出装说明</h4>
-                    <p className="text-text-primary text-center leading-relaxed mb-8">
-                      这套方案针对<span className="text-primary font-bold"> {selectedScene} </span>对局设计。
-                      前期优先做出鞋子保证移速，中期补齐核心肉装，后期根据对手爆发情况补出保命装。
-                      <br />
-                      <span className="text-success font-bold text-sm mt-2 block">新手建议：不要频繁更换装备，先熟练掌握一套。</span>
-                    </p>
+                        {set.tips && (
+                          <section className="mt-auto">
+                            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+                              <h4 className="text-primary font-bold mb-2 flex items-center gap-2 text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                方案思路
+                              </h4>
+                              <p className="text-text-secondary text-xs leading-relaxed italic">
+                                {set.tips.replace('Tips：', '')}
+                              </p>
+                            </div>
+                          </section>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <section className="flex justify-center mt-4">
                     <CopyBtn text={copyText} />
                   </section>
                 </>
@@ -158,18 +225,19 @@ export default function EquipmentRecommendPage() {
         </div>
       ) : (
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* 搜索区 */}
-          <div className="p-4 bg-bg-card flex justify-center sticky top-0 z-10">
+          {/* 搜索与分类区 */}
+          <div className="p-4 bg-bg-card shadow-sm border-b border-border-light flex flex-col items-center gap-4 sticky top-0 z-20">
+            {/* 搜索框 */}
             <div className="relative w-full max-w-md">
               <input
                 type="text"
                 placeholder="搜索道具名称..."
-                className="w-full px-10 py-2 bg-bg-page border border-border-light rounded-full text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-full px-10 py-2.5 bg-bg-page border border-border-light rounded-full text-sm focus:outline-none focus:border-primary/50 transition-all shadow-inner"
                 value={toolSearch}
                 onChange={(e) => setToolSearch(e.target.value)}
               />
               <svg 
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" 
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary" 
                 xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               >
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
@@ -177,11 +245,28 @@ export default function EquipmentRecommendPage() {
               {toolSearch && (
                 <button 
                   onClick={() => setToolSearch('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
               )}
+            </div>
+
+            {/* 分类筛选 */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`px-5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${
+                    activeCategory === cat.id
+                      ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
+                      : 'bg-bg-page text-text-secondary border-border-light hover:border-primary/30 hover:text-primary'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -225,7 +310,7 @@ export default function EquipmentRecommendPage() {
                             <h5 className="text-primary font-bold text-sm">{tool.tool}</h5>
                             <div className="flex items-center gap-1">
                               <span className="text-yellow-500 text-[10px]">●</span>
-                              <span className="text-white/60 text-[10px]">售价: {toolInfo.price}</span>
+                              <span className="text-white/60 text-[10px]">售价: {toolInfo?.price}</span>
                             </div>
                           </div>
                           
@@ -233,11 +318,11 @@ export default function EquipmentRecommendPage() {
                             {/* 属性信息 */}
                             <div 
                               className="text-white/90 text-[11px] leading-relaxed [&>p]:mb-1 [&>p:last-child]:mb-0"
-                              dangerouslySetInnerHTML={{ __html: toolInfo.stats }}
+                              dangerouslySetInnerHTML={{ __html: toolInfo?.stats }}
                             />
                             
                             {/* 被动效果 */}
-                            {toolInfo.passive && (
+                            {toolInfo?.passive && (
                               <div 
                                 className="mt-1 pt-2 border-t border-white/5 text-primary text-[11px] leading-relaxed [&>p]:mb-1 [&>p:last-child]:mb-0"
                                 dangerouslySetInnerHTML={{ __html: toolInfo.passive }}

@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { HeroSelect } from '../components/business/HeroSelect';
-import { SceneFilter } from '../components/business/SceneFilter';
 import { CopyBtn } from '../components/atomic/CopyBtn';
 import { Button } from '../components/atomic/Button';
 import { Toast } from '../components/atomic/Toast';
+import { InscriptionSimulation } from '../components/business/InscriptionSimulation';
+import { Zap, LayoutGrid, Info } from 'lucide-react';
+import { heroList } from '../mock/hero/index';
+import heroDetailsData from '../mock/hero/hero_details.json';
 import inscriptionListData from '../mock/equipment/inscriptionList.json';
 
 interface Inscription {
@@ -24,37 +27,81 @@ interface InscriptionRecommendation {
   };
 }
 
+// 计算默认选中的英雄 ID（hero_details.json 中的第一条数据）
+const getDefaultHeroId = () => {
+  const firstHeroName = (heroDetailsData as any[])[0]?.name;
+  if (!firstHeroName) return 1;
+  const allHeroes = Object.values(heroList).flatMap(list => list);
+  const foundHero = allHeroes.find(h => h.heroName === firstHeroName);
+  return foundHero?.id || 1;
+};
+
 export default function InscriptionMatchPage() {
-  const [selectedHeroId, setSelectedHeroId] = useState<number>(1);
-  const [selectedScene, setSelectedScene] = useState<string>('常规');
+  const [selectedHeroId, setSelectedHeroId] = useState<number>(getDefaultHeroId());
   const [currentInscriptions, setCurrentInscriptions] = useState<Inscription[]>([]);
+  const [recommendDesc, setRecommendDesc] = useState<string>('');
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, _setToastMsg] = useState('');
   const [adjustingIdx, setAdjustingIdx] = useState<number | null>(null);
   const [adjustTip, setAdjustTip] = useState<string | null>(null);
+  const [isSimulationMode, setIsSimulationMode] = useState(false);
+
+  // 铭文类型映射
+  const inscriptionTypeMap: Record<string, 'red' | 'blue' | 'green'> = {
+    // 红色
+    '宿命': 'red', '无双': 'red', '圣人': 'red', '梦魇': 'red', '异变': 'red', 
+    '纷争': 'red', '凶兆': 'red', '祸源': 'red', '红月': 'red', '传承': 'red',
+    // 蓝色
+    '调和': 'blue', '夺萃': 'blue', '轮回': 'blue', '狩猎': 'blue', '贪婪': 'blue', 
+    '隐匿': 'blue', '冥想': 'blue', '繁荣': 'blue', '兽痕': 'blue', '长生': 'blue',
+    // 绿色
+    '虚空': 'green', '鹰眼': 'green', '献祭': 'green', '心眼': 'green', '怜悯': 'green', 
+    '敬畏': 'green', '回声': 'green', '霸者': 'green', '均衡': 'green', '灵山': 'green'
+  };
+
+  // 获取英雄名称的辅助函数
+  const getHeroNameById = (id: number) => {
+    const allHeroes = Object.values(heroList).flatMap(list => list);
+    const hero = allHeroes.find(h => h.id === id);
+    return hero?.heroName || '';
+  };
 
   // 监听英雄或场景变化
   useEffect(() => {
-    const recommendation = (inscriptionListData as InscriptionRecommendation[]).find(
-      item => item.heroId === selectedHeroId && item.scene === selectedScene
-    );
-
-    if (recommendation) {
-      setCurrentInscriptions(recommendation.inscriptionList);
+    const heroName = getHeroNameById(selectedHeroId);
+    
+    // 优先从 hero_details.json 获取数据
+    const heroDetail = (heroDetailsData as any[]).find(h => h.name === heroName);
+    
+    if (heroDetail && heroDetail.inscriptions) {
+      const insList = heroDetail.inscriptions.list.map((ins: any) => ({
+        name: ins.name,
+        count: 10, // 默认10个
+        type: inscriptionTypeMap[ins.name] || 'red'
+      }));
+      setCurrentInscriptions(insList);
+      setRecommendDesc(heroDetail.inscriptions.tips || '');
     } else {
-      // 默认空状态或根据英雄类型分配默认铭文（此处简化处理）
-      setCurrentInscriptions([]);
+      // 备选方案
+      const recommendation = (inscriptionListData as InscriptionRecommendation[]).find(
+        item => item.heroId === selectedHeroId
+      );
+
+      if (recommendation) {
+        setCurrentInscriptions(recommendation.inscriptionList);
+        setRecommendDesc(recommendation.desc);
+      } else {
+        setCurrentInscriptions([]);
+        setRecommendDesc('');
+      }
     }
-  }, [selectedHeroId, selectedScene]);
+  }, [selectedHeroId]);
 
   const copyText = useMemo(() => {
     if (currentInscriptions.length === 0) return '';
     const combo = currentInscriptions.map(ins => `${ins.name}×${ins.count}`).join(' + ');
-    const recommendation = (inscriptionListData as InscriptionRecommendation[]).find(
-      item => item.heroId === selectedHeroId && item.scene === selectedScene
-    );
-    return `${combo} → ${recommendation?.desc || ''}`;
-  }, [currentInscriptions, selectedHeroId, selectedScene]);
+    return `${combo} → ${recommendDesc}`;
+  }, [currentInscriptions, recommendDesc]);
 
   const handleCountAdjust = (index: number, delta: number) => {
     const newList = [...currentInscriptions];
@@ -67,7 +114,7 @@ export default function InscriptionMatchPage() {
 
     // 显示调整提示
     const recommendation = (inscriptionListData as InscriptionRecommendation[]).find(
-      item => item.heroId === selectedHeroId && item.scene === selectedScene
+      item => item.heroId === selectedHeroId
     );
     if (recommendation) {
       setAdjustTip(delta > 0 ? recommendation.adjustTips.increase : recommendation.adjustTips.decrease);
@@ -92,15 +139,49 @@ export default function InscriptionMatchPage() {
         <div className="w-full md:w-64">
           <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
         </div>
-        <div className="w-full md:w-auto">
-          <SceneFilter activeScene={selectedScene} onSceneChange={setSelectedScene} />
-        </div>
       </div>
 
       {/* 主体展示区 */}
       <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-        <div className="max-w-2xl mx-auto flex flex-col gap-8 pb-10">
-          {currentInscriptions.length > 0 ? (
+        <div className="max-w-4xl mx-auto flex flex-col gap-8 pb-10">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex flex-col">
+              <h2 className="text-2xl font-black text-text-primary tracking-tight">铭文搭配</h2>
+              <p className="text-xs text-text-secondary mt-1">
+                {isSimulationMode ? '模拟真实铭文搭配，实时查看属性加成' : '查看推荐铭文组合与实战微调建议'}
+              </p>
+            </div>
+            <div className="flex items-center bg-bg-card p-1 rounded-2xl border border-border-light shadow-sm">
+              <button
+                onClick={() => setIsSimulationMode(false)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                  !isSimulationMode 
+                    ? 'bg-primary text-white shadow-md' 
+                    : 'text-text-secondary hover:text-primary hover:bg-primary/5'
+                }`}
+              >
+                <LayoutGrid size={16} />
+                方案推荐
+              </button>
+              <button
+                onClick={() => setIsSimulationMode(true)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                  isSimulationMode 
+                    ? 'bg-primary text-white shadow-md' 
+                    : 'text-text-secondary hover:text-primary hover:bg-primary/5'
+                }`}
+              >
+                <Zap size={16} />
+                实战模拟
+              </button>
+            </div>
+          </div>
+
+          {isSimulationMode ? (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <InscriptionSimulation recommendedInscriptions={currentInscriptions} />
+            </div>
+          ) : currentInscriptions.length > 0 ? (
             <>
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center justify-between mb-6 px-2">
@@ -178,7 +259,7 @@ export default function InscriptionMatchPage() {
                     ))}
                     <span className="text-primary mx-3">→</span>
                     <span className="text-primary font-bold">
-                      {(inscriptionListData as InscriptionRecommendation[]).find(i => i.heroId === selectedHeroId)?.desc}
+                      {recommendDesc.replace('Tips：', '')}
                     </span>
                   </div>
                   <p className="text-text-secondary text-center text-sm leading-relaxed mt-4 max-w-md">
