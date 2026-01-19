@@ -5,7 +5,6 @@ import { CopyBtn } from '../components/atomic/CopyBtn';
 import { Button } from '../components/atomic/Button';
 import { Toast } from '../components/atomic/Toast';
 import inscriptionListData from '../mock/equipment/inscriptionList.json';
-import epigraphData from '../mock/equipment/epigraph.json';
 
 interface Inscription {
   name: string;
@@ -30,7 +29,7 @@ export default function InscriptionMatchPage() {
   const [selectedScene, setSelectedScene] = useState<string>('常规');
   const [currentInscriptions, setCurrentInscriptions] = useState<Inscription[]>([]);
   const [showToast, setShowToast] = useState(false);
-  const [toastMsg, setToastMsg] = useState('');
+  const [toastMsg, _setToastMsg] = useState('');
   const [adjustingIdx, setAdjustingIdx] = useState<number | null>(null);
   const [adjustTip, setAdjustTip] = useState<string | null>(null);
 

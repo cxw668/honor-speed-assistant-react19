@@ -41,9 +41,7 @@ export const Toast = ({ message, duration = 2000, onClose, type = 'info' }: Toas
   );
 };
 
-// Global toast helper
-let toastTimeout: any = null;
-export const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+export const showToast = (_message: string, _type: 'success' | 'error' | 'info' = 'info') => {
   // This is a simplified version. For a real app, you might want a more robust toast manager.
   const container = document.getElementById('toast-root') || document.createElement('div');
   if (!container.id) {

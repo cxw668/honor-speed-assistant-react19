@@ -5,7 +5,6 @@ import { HeroDetailCard } from '../components/business/HeroDetailCard';
 import { HeroSearch } from '../components/atomic/HeroSearch';
 import { Dialog } from '../components/atomic/Dialog';
 import { heroList, heroAvatarList } from '../mock/hero/index';
-import type { HeroItem } from '../types';
 
 const HERO_TYPES = [
   { id: 0, name: '全部' },
