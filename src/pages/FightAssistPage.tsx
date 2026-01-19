@@ -1,6 +1,5 @@
-import { CDTimer } from '../components/business/CDTimer';
-import { WinRateStats } from '../components/business/WinRateStats';
-import { Shield, Swords, Info } from 'lucide-react';
+import { HeroRelationshipAnalysis } from '../components/business/HeroRelationshipAnalysis';
+import { Swords, Info } from 'lucide-react';
 
 export default function FightAssistPage() {
   return (
@@ -19,46 +18,29 @@ export default function FightAssistPage() {
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tighter flex items-center gap-3">
-              对战辅助工具
+              阵容克制分析
               <Swords className="text-primary hidden md:block" size={32} />
             </h1>
           </div>
-          <div className="flex items-center gap-4 text-text-secondary text-sm font-medium bg-bg-card/50 backdrop-blur-md px-4 py-2 rounded-2xl border border-border-light">
-            <div className="flex items-center gap-1.5">
-              <Shield size={16} className="text-success" />
-              <span>实时监测</span>
-            </div>
-            <div className="w-px h-4 bg-border-light" />
-            <div className="flex items-center gap-1.5">
-              <Info size={16} className="text-primary" />
-              <span>智能提醒</span>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* 主体内容区 - 左右分栏 */}
-      <div className="relative z-10 flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-        {/* 左侧：CD计时器 */}
-        <div className="animate-in fade-in slide-in-from-left-8 duration-700">
-          <CDTimer />
-        </div>
-
-        {/* 右侧：胜率统计 */}
-        <div className="animate-in fade-in slide-in-from-right-8 duration-700 delay-150">
-          <WinRateStats />
+      {/* 主体内容区 */}
+      <div className="relative z-10 flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">
+        <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <HeroRelationshipAnalysis />
         </div>
       </div>
       
-      {/* 底部小贴士 - 更加精致 */}
+      {/* 底部小贴士 */}
       <div className="relative z-10 pb-8 px-6">
         <div className="max-w-2xl mx-auto bg-primary/5 backdrop-blur-sm border border-primary/10 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000">
           <div className="p-2 bg-primary/10 rounded-xl text-primary mt-0.5">
             <Info size={18} />
           </div>
           <div className="text-sm text-text-secondary leading-relaxed">
-            <strong className="text-text-primary block mb-1">使用贴士：</strong>
-            计时器倒计时结束时会有电子音提醒。胜率统计实时计算并自动保存至本地，帮助你随时掌控对战状态，复盘每一场对决。
+            <strong className="text-text-primary block mb-1">实战建议：</strong>
+            阵容分析功能基于英雄关系数据，实时计算双方英雄的克制与搭档关系，帮助你在 BP 阶段或对战中快速定位核心威胁。
           </div>
         </div>
       </div>

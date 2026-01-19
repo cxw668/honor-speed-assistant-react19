@@ -4,12 +4,20 @@ import { heroList, heroAvatarList } from '../../mock/hero/index';
 interface HeroSelectProps {
   value: number | string;
   onChange: (heroId: number) => void;
+  isStatic?: boolean;
 }
 
-export const HeroSelect = ({ value, onChange }: HeroSelectProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const HeroSelect = ({ value, onChange, isStatic = false }: HeroSelectProps) => {
+  const [isOpen, setIsOpen] = useState(isStatic);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isStatic && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isStatic]);
 
   // 平铺所有英雄并关联头像
   const allHeroes = useMemo(() => {
@@ -54,38 +62,44 @@ export const HeroSelect = ({ value, onChange }: HeroSelectProps) => {
   };
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
-      {/* 触发按钮/输入框 */}
-      <div 
-        className={`
-          flex items-center gap-3 bg-bg-card border-2 rounded-2xl px-4 py-3 cursor-pointer transition-all
-          ${isOpen ? 'border-primary shadow-lg shadow-primary/10' : 'border-border-light hover:border-primary/50'}
-        `}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {selectedHero ? (
-          <>
-            <img src={selectedHero.avatar} alt={selectedHero.heroName} className="w-8 h-8 rounded-lg shadow-sm" />
-            <span className="text-text-primary font-bold text-lg flex-1">{selectedHero.heroName}</span>
-          </>
-        ) : (
-          <span className="font-bold text-lg flex-1">请选择英雄</span>
-        )}
-        <svg 
-          className={`text-text-secondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+    <div className={`relative w-full ${isStatic ? 'h-full flex flex-col' : ''}`} ref={dropdownRef}>
+      {/* 触发按钮/输入框 - Static 模式下隐藏 */}
+      {!isStatic && (
+        <div 
+          className={`
+            flex items-center gap-3 bg-bg-card border-2 rounded-2xl px-4 py-3 cursor-pointer transition-all
+            ${isOpen ? 'border-primary shadow-lg shadow-primary/10' : 'border-border-light hover:border-primary/50'}
+          `}
+          onClick={() => setIsOpen(!isOpen)}
         >
-          <path d="m6 9 6 6 6-6"/>
-        </svg>
-      </div>
+          {selectedHero ? (
+            <>
+              <img src={selectedHero.avatar} alt={selectedHero.heroName} className="w-8 h-8 rounded-lg shadow-sm" />
+              <span className="text-text-primary font-bold text-lg flex-1">{selectedHero.heroName}</span>
+            </>
+          ) : (
+            <span className="font-bold text-lg flex-1">请选择英雄</span>
+          )}
+          <svg 
+            className={`text-text-secondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+          >
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </div>
+      )}
 
       {/* 下拉面板 */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-bg-card border-2 border-border-light rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className={`
+          ${isStatic ? 'relative mt-0 border-0 shadow-none flex-1 flex flex-col min-h-0' : 'absolute top-full left-0 right-0 mt-2 border-2 border-border-light shadow-2xl z-[100]'} 
+          bg-bg-card rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200
+        `}>
           {/* 搜索框 */}
           <div className="p-3 border-b border-border-light bg-bg-page/50">
             <div className="relative">
               <input
+                ref={inputRef}
                 autoFocus
                 type="text"
                 placeholder="搜索英雄名称..."
@@ -104,7 +118,7 @@ export const HeroSelect = ({ value, onChange }: HeroSelectProps) => {
           </div>
 
           {/* 列表区 */}
-          <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
+          <div className={`${isStatic ? 'flex-1 overflow-y-auto' : 'max-h-[300px] overflow-y-auto'} scrollbar-hide`}>
             {filteredHeroes.length > 0 ? (
               filteredHeroes.map((hero) => (
                 <div
