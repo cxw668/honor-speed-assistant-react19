@@ -37,7 +37,7 @@ export const HeroTypeFilter = ({
                 flex items-center justify-between
                 ${selectedType === type.name 
                   ? 'bg-primary text-white shadow-sm' 
-                  : 'bg-white text-text-main hover:bg-[#F0F0F0]'}
+                  : 'bg-white text-desc hover:bg-[#F0F0F0]'}
               `}
             >
               <span>{type.name}</span>

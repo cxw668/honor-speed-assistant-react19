@@ -9,7 +9,7 @@ export const SceneFilter = ({ activeScene, onSceneChange }: SceneFilterProps) =>
   const scenes = ['常规', '顺风', '逆风'];
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex gap-2">
       <label className="text-desc text-sm font-bold ml-1">对局场景</label>
       <div className="flex gap-3 bg-bg-card p-1.5 rounded-2xl border-2 border-border-light">
         {scenes.map((scene) => (

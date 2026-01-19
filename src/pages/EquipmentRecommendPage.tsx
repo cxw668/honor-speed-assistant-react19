@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { HeroSelect } from '../components/business/HeroSelect';
 import { SceneFilter } from '../components/business/SceneFilter';
 import { EquipmentList } from '../components/business/EquipmentList';
@@ -23,7 +24,8 @@ interface EquipmentRecommendation {
 }
 
 export default function EquipmentRecommendPage() {
-  const [activeTab, setActiveTab] = useState<'equipment' | 'skills' | 'tools'>('equipment');
+  const [searchParams] = useSearchParams();
+  const activeTab = (searchParams.get('tab') as 'equipment' | 'skills' | 'tools') || 'equipment';
   const [selectedHeroId, setSelectedHeroId] = useState<number>(1); // Default to Arthur
   const [selectedScene, setSelectedScene] = useState<string>('常规');
   const [currentEquipment, setCurrentEquipment] = useState<Equipment[]>([]);
@@ -84,36 +86,12 @@ export default function EquipmentRecommendPage() {
 
   return (
     <div className="h-full flex flex-col bg-bg-page overflow-hidden">
-      {/* 顶部 Tab 切换 */}
-      <div className="flex justify-center gap-4 py-4 bg-bg-card border-b border-border-light shrink-0">
-        <Button
-          variant={activeTab === 'equipment' ? 'primary' : 'secondary'}
-          size="sm"
-          onClick={() => setActiveTab('equipment')}
-        >
-          智能出装推荐
-        </Button>
-        <Button
-          variant={activeTab === 'skills' ? 'primary' : 'secondary'}
-          size="sm"
-          onClick={() => setActiveTab('skills')}
-        >
-          召唤师技能介绍
-        </Button>
-        <Button
-          variant={activeTab === 'tools' ? 'primary' : 'secondary'}
-          size="sm"
-          onClick={() => setActiveTab('tools')}
-        >
-          道具大全
-        </Button>
-      </div>
-
       {activeTab === 'equipment' ? (
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* 顶部选择区: 80px */}
-          <div className="h-[120px] md:h-[80px] flex flex-col md:flex-row items-center justify-center gap-6 px-6 bg-bg-card shadow-sm shrink-0 z-10">
-            <div className="w-full md:w-64">
+          <div className="h-[120px] md:h-[80px] flex flex-col md:flex-row items-center justify-center gap-6 shadow-sm shrink-0 z-10 bg-bg-card border-b border-border-light">
+            <div className="flex w-full md:w-64">
+              <label className='text-desc text-sm font-bold min-w-14 mr-1'>英雄名称</label>
               <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
             </div>
             <div className="w-full md:w-auto">
@@ -181,7 +159,7 @@ export default function EquipmentRecommendPage() {
       ) : (
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* 搜索区 */}
-          <div className="p-4 bg-bg-card border-b border-border-light flex justify-center sticky top-0 z-10">
+          <div className="p-4 bg-bg-card flex justify-center sticky top-0 z-10">
             <div className="relative w-full max-w-md">
               <input
                 type="text"
@@ -209,7 +187,7 @@ export default function EquipmentRecommendPage() {
 
           {/* 道具列表 */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-hide">
-            <div className="max-w-6xl mx-auto grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4 pt-16 pb-20">
+            <div className="max-w-6xl mx-auto grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4 pt-4 pb-20">
               {filteredTools.length > 0 ? (
                 filteredTools.map((tool, index) => {
                   const toolInfo = getToolDetail(tool.tool);

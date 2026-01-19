@@ -31,7 +31,7 @@ export const HeroAvatar = ({ src, name, active = false, onClick }: HeroAvatarPro
           }}
         />
       </div>
-      <span className={`text-[12px] text-center line-clamp-1 ${active ? 'text-primary font-bold' : 'text-text-main'}`}>
+      <span className={`text-[12px] text-center line-clamp-1 ${active ? 'text-primary font-bold' : 'text-white'}`}>
         {name}
       </span>
     </div>

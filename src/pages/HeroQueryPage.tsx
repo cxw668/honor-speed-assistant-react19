@@ -80,13 +80,13 @@ export const HeroQueryPage = () => {
   }, [heroesWithAvatars]);
 
   return (
-    <div className="page-container flex-row! items-stretch overflow-hidden">
+    <div className="page-container flex overflow-hidden mt-6 ml-4">
       {/* 左侧筛选区: 300px */}
       <div className="w-[300px] flex flex-col gap-module shrink-0 overflow-hidden">
         <div className="card h-full overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h2 className="title">英雄速查</h2>
-            <span className="text-[12px] bg-bg-page px-2 py-1 rounded-full text-text-secondary border border-[#eee]">
+            <span className="text-[12px] bg-bg-page px-2 py-1 rounded-full text-text-secondary border border-border-light">
               共 {total} 位
             </span>
           </div>
