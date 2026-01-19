@@ -1,0 +1,52 @@
+[
+  {
+    "name": "惩击",
+    "description": "30秒CD：对身边的野怪/小兵造成真实伤害并眩晕1秒。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80104.jpg"
+  },
+  {
+    "name": "终结",
+    "description": "90秒CD：立即对身边敌方英雄造成其已损生命值14%的真实伤害。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80108.jpg"
+  },
+  {
+    "name": "狂暴",
+    "description": "60秒CD：增加10%伤害、15%韧性、20%物理吸血和30%法术吸血，持续7秒。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80110.jpg"
+  },
+  {
+    "name": "疾跑",
+    "description": "90秒CD：增加30%移动速度，持续10秒，期间不受减速效果影响。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80109.jpg"
+  },
+  {
+    "name": "治疗术",
+    "description": "120秒CD：回复自己与附近队友15%生命值，并提高15%移动速度，持续2秒。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80102.jpg"
+  },
+  {
+    "name": "干扰",
+    "description": "90秒CD：对敌方防御塔使用，使其沉默5秒；对己方防御塔使用，使其无敌4秒且攻速翻倍。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80105.jpg"
+  },
+  {
+    "name": "眩晕",
+    "description": "90秒CD：对身边敌人造成0.75秒眩晕，并附带持续1秒的减速。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80103.jpg"
+  },
+  {
+    "name": "净化",
+    "description": "120秒CD：解除自身所有负面状态（除支配外），并免疫控制1.5秒。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80107.jpg"
+  },
+  {
+    "name": "弱化",
+    "description": "90秒CD：减少身边敌人25%输出，并增加自身20%免伤，持续4秒。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summonero/80121.png"
+  },
+  {
+    "name": "闪现",
+    "description": "120秒CD：向指定方向位移一段距离。",
+    "icon": "https://game.gtimg.cn/images/yxzj/img201606/summoner/80115.jpg"
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "heroId": 1,
+    "heroName": "亚瑟",
+    "scene": "常规",
+    "equipmentList": [
+      { "id": "101", "name": "抵抗之靴", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1422.jpg", "desc": "增加韧性，减少受控时间，让你在团战中更灵活。" },
+      { "id": "102", "name": "红莲斗篷", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1331.jpg", "desc": "增加生命值和物理防御，每秒对身边敌人造成法术伤害，增强清兵能力。" },
+      { "id": "103", "name": "反伤刺甲", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1337.jpg", "desc": "极高的物理防御，受到物理伤害时回敬对手，克制物理爆发。" },
+      { "id": "104", "name": "魔女斗篷", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/13310.jpg", "desc": "提供法术防御和护盾，有效抵御敌方法师伤害。" },
+      { "id": "105", "name": "不祥征兆", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1334.jpg", "desc": "受到攻击时降低攻击者攻速和移速，有效限制敌方射手。" },
+      { "id": "106", "name": "贤者的庇护", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1342.jpg", "desc": "提供复活机会，增加团战容错率。" }
+    ]
+  },
+  {
+    "heroId": 1,
+    "heroName": "亚瑟",
+    "scene": "顺风",
+    "equipmentList": [
+      { "id": "101", "name": "抵抗之靴", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1422.jpg", "desc": "增加韧性，让你在追击时更难被阻拦。" },
+      { "id": "107", "name": "暗影战斧", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1137.jpg", "desc": "增加物理穿透和冷却缩减，让你对脆皮造成更高威胁。" },
+      { "id": "102", "name": "红莲斗篷", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1331.jpg", "desc": "攻守兼备，在顺风局能更轻松地贴脸输出。" },
+      { "id": "103", "name": "反伤刺甲", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1337.jpg", "desc": "让你的身板更硬，敌方物理英雄更难反制。" },
+      { "id": "108", "name": "宗师之力", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1138.jpg", "desc": "技能后下一次普攻伤害翻倍，极大增强爆发能力。" },
+      { "id": "109", "name": "暴烈之甲", "icon": "https://game.gtimg.cn/images/yxzj/img201606/itemimg/1336.jpg", "desc": "受到伤害后提升自身移速和输出，让你在收割时更勇猛。" }
+    ]
+  }
+]

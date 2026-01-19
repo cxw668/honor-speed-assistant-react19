@@ -1,4 +1,4 @@
-import React, { lazy } from 'react';
+import { lazy } from 'react';
 import type { RouteItem } from '@/types';
 
 const HomePage = lazy(() => import('@/pages/HomePage'));

@@ -21,11 +21,26 @@ export type HeroType = '坦克' | '战士' | '刺客' | '辅助' | '射手' | '�
 export interface HeroItem {
   id: number
   heroName: string
-  heroType: HeroType
+  heroType: string
   corePosition: string
   combatFeature: string
   difficulty: 1 | 2 | 3 | 4 | 5
   isNewbieRecommend: boolean
+  avatar?: string
+}
+export interface Hero {
+  id: number;
+  name: string;
+  avatar: string;
+  type: string;
+  difficulty: number;
+  advantage: string;
+  pitfall: string;
+  skills: {
+    name: string;
+    desc: string;
+    isCore: boolean;
+  }[];
 }
 export const HeroTypeList = [
   { label: '坦克', value: '坦克' },
@@ -35,3 +50,7 @@ export const HeroTypeList = [
   { label: '射手', value: '射手' },
   { label: '法师', value: '法师' }
 ]
+export interface HeroAvatarMap {
+  hero: string
+  hero_src: string
+}

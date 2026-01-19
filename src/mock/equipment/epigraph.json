@@ -1,0 +1,218 @@
+{
+  "red_inscriptions": [
+    {
+      "name": "异变",
+      "attr_detail": { "物理攻击": 2, "物理穿透": 3.6 },
+      "attr_desc": "+2物理攻击，+3.6物理穿透",
+      "suitable_role": "物理刺客、战士",
+      "suitable_hero": "兰陵王、橘右京、赵云、娜可露露"
+    },
+    {
+      "name": "无双",
+      "attr_detail": { "暴击率": 0.7, "暴击效果": 3.6 },
+      "attr_desc": "+0.7%暴击率，+3.6%暴击效果",
+      "suitable_role": "暴击流射手、暴击刺客",
+      "suitable_hero": "孙悟空、孙尚香、百里守约、阿轲"
+    },
+    {
+      "name": "祸源",
+      "attr_detail": { "暴击率": 1.6 },
+      "attr_desc": "+1.6%暴击率",
+      "suitable_role": "高频普攻射手、站桩射手",
+      "suitable_hero": "后羿、鲁班七号、黄忠、伽罗"
+    },
+    {
+      "name": "宿命",
+      "attr_detail": { "物理防御": 2.3, "最大生命": 33.7, "攻击速度": 1 },
+      "attr_desc": "+2.3物理防御，+33.7最大生命，+1%攻击速度",
+      "suitable_role": "坦克、肉装战士、坦边",
+      "suitable_hero": "张飞、项羽、夏侯惇、程咬金"
+    },
+    {
+      "name": "红月",
+      "attr_detail": { "攻击速度": 1.6, "暴击率": 0.5 },
+      "attr_desc": "+1.6%攻击速度，+0.5%暴击率",
+      "suitable_role": "攻速流射手、攻速刺客",
+      "suitable_hero": "马可波罗、公孙离、李白、百里玄策"
+    },
+    {
+      "name": "纷争",
+      "attr_detail": { "物理攻击": 2.5, "物理吸血": 0.5 },
+      "attr_desc": "+2.5物理攻击，+0.5%物理吸血",
+      "suitable_role": "持续输出战士、半肉刺客",
+      "suitable_hero": "老夫子、典韦、亚瑟、孙策"
+    },
+    {
+      "name": "传承",
+      "attr_detail": { "物理攻击": 3.2 },
+      "attr_desc": "+3.2物理攻击",
+      "suitable_role": "纯物攻战士、普攻流英雄",
+      "suitable_hero": "铠、吕布、典韦、盘古"
+    },
+    {
+      "name": "圣人",
+      "attr_detail": { "法术攻击": 5.3 },
+      "attr_desc": "+5.3法术攻击",
+      "suitable_role": "爆发型法师、炮台法师",
+      "suitable_hero": "妲己、安琪拉、干将莫邪、小乔"
+    },
+    {
+      "name": "梦魇",
+      "attr_detail": { "法术攻击": 4.2, "法术穿透": 2.4 },
+      "attr_desc": "+4.2法术攻击，+2.4法术穿透",
+      "suitable_role": "法刺、消耗型法师、炮台法师",
+      "suitable_hero": "不知火舞、嬴政、诸葛亮、上官婉儿"
+    },
+    {
+      "name": "凶兆",
+      "attr_detail": { "法术攻击": 4.2, "攻击速度": 0.6 },
+      "attr_desc": "+4.2法术攻击，+0.6%攻击速度",
+      "suitable_role": "攻速型法师、持续输出法师",
+      "suitable_hero": "司马懿、扁鹊、墨子、杨玉环"
+    }
+  ],
+  "blue_inscriptions": [
+    {
+      "name": "调和",
+      "attr_detail": { "最大生命": 50, "每5秒回血": 7, "移速": 0.5 },
+      "attr_desc": "+50最大生命，+7每5秒回血，+0.5%移速",
+      "suitable_role": "坦克、辅助、抗压战士、坦边",
+      "suitable_hero": "张飞、牛魔、夏侯惇、蔡文姬"
+    },
+    {
+      "name": "长生",
+      "attr_detail": { "最大生命": 90 },
+      "attr_desc": "+90最大生命",
+      "suitable_role": "纯肉坦克、纯肉辅助",
+      "suitable_hero": "东皇太一、白起、刘禅、廉颇"
+    },
+    {
+      "name": "狩猎",
+      "attr_detail": { "攻击速度": 1, "移速": 1 },
+      "attr_desc": "+1%攻击速度，+1%移速",
+      "suitable_role": "攻速流射手、刺客、打野",
+      "suitable_hero": "马可波罗、韩信、兰陵王、公孙离"
+    },
+    {
+      "name": "夺萃",
+      "attr_detail": { "物理吸血": 1.6 },
+      "attr_desc": "+1.6%物理吸血",
+      "suitable_role": "无吸血装备射手、普攻刺客",
+      "suitable_hero": "百里守约、孙尚香、成吉思汗、孙悟空"
+    },
+    {
+      "name": "隐匿",
+      "attr_detail": { "物理攻击": 1.6, "移速": 1 },
+      "attr_desc": "+1.6物理攻击，+1%移速",
+      "suitable_role": "爆发型刺客、突进战士、打野",
+      "suitable_hero": "娜可露露、赵云、橘右京、裴擒虎"
+    },
+    {
+      "name": "贪婪",
+      "attr_detail": { "法术吸血": 1.6 },
+      "attr_desc": "+1.6%法术吸血",
+      "suitable_role": "续航型法师、法刺",
+      "suitable_hero": "貂蝉、芈月、高渐离、司马懿"
+    },
+    {
+      "name": "轮回",
+      "attr_detail": { "法术攻击": 2.4, "法术吸血": 1 },
+      "attr_desc": "+2.4法术攻击，+1%法术吸血",
+      "suitable_role": "均衡型法师、炮台法师",
+      "suitable_hero": "诸葛亮、甄姬、武则天、王昭君"
+    },
+    {
+      "name": "繁荣",
+      "attr_detail": { "物理防御": 5, "物理吸血": 0.4 },
+      "attr_desc": "+5物理防御，+0.4%物理吸血",
+      "suitable_role": "抗压射手、半肉战士",
+      "suitable_hero": "狄仁杰、后羿、老夫子、夏侯惇"
+    },
+    {
+      "name": "冥想",
+      "attr_detail": { "最大生命": 60, "每5秒回血": 4.5 },
+      "attr_desc": "+60最大生命，+4.5每5秒回血",
+      "suitable_role": "坦克、辅助、续航型坦边",
+      "suitable_hero": "蔡文姬、廉颇、庄周、刘邦"
+    },
+    {
+      "name": "兽痕",
+      "attr_detail": { "暴击率": 0.5, "最大生命": 60 },
+      "attr_desc": "+0.5%暴击率，+60最大生命",
+      "suitable_role": "半肉刺客、半肉战士",
+      "suitable_hero": "孙悟空、典韦、铠、澜"
+    }
+  ],
+  "green_inscriptions": [
+    {
+      "name": "鹰眼",
+      "attr_detail": { "物理攻击": 0.9, "物理穿透": 6.4 },
+      "attr_desc": "+0.9物理攻击，+6.4物理穿透",
+      "suitable_role": "全物理输出英雄通用",
+      "suitable_hero": "所有射手、刺客、战士、打野"
+    },
+    {
+      "name": "心眼",
+      "attr_detail": { "攻击速度": 0.6, "法术穿透": 6.4 },
+      "attr_desc": "+0.6%攻击速度，+6.4法术穿透",
+      "suitable_role": "法刺、攻速型法师、消耗法师",
+      "suitable_hero": "不知火舞、貂蝉、嬴政、杨玉环"
+    },
+    {
+      "name": "怜悯",
+      "attr_detail": { "冷却缩减": 1 },
+      "attr_desc": "+1%冷却缩减",
+      "suitable_role": "技能型法师、功能辅助、技能流战士",
+      "suitable_hero": "王昭君、张良、钟馗、孙膑"
+    },
+    {
+      "name": "虚空",
+      "attr_detail": { "最大生命": 37.5, "冷却缩减": 0.6 },
+      "attr_desc": "+37.5最大生命，+0.6%冷却缩减",
+      "suitable_role": "坦克、辅助、半肉法师",
+      "suitable_hero": "张飞、牛魔、白起、墨子"
+    },
+    {
+      "name": "均衡",
+      "attr_detail": { "物理防御": 5, "法术防御": 5 },
+      "attr_desc": "+5物理防御，+5法术防御",
+      "suitable_role": "双抗型坦克、坦边、抗压辅助",
+      "suitable_hero": "项羽、夏侯惇、刘禅、庄周"
+    },
+    {
+      "name": "霸者",
+      "attr_detail": { "物理防御": 14 },
+      "attr_desc": "+14物理防御",
+      "suitable_role": "物抗型坦克、辅助、对抗物理阵容",
+      "suitable_hero": "廉颇、白起、刘邦、张飞"
+    },
+    {
+      "name": "灵山",
+      "attr_detail": { "法术防御": 14 },
+      "attr_desc": "+14法术防御",
+      "suitable_role": "法抗型坦克、辅助、对抗法术阵容",
+      "suitable_hero": "庄周、蔡文姬、孙膑、东皇太一"
+    },
+    {
+      "name": "回声",
+      "attr_detail": { "物理防御": 2.7, "法术防御": 2.7, "冷却缩减": 0.6 },
+      "attr_desc": "+2.7物理防御，+2.7法术防御，+0.6%冷却缩减",
+      "suitable_role": "功能型辅助、半肉法师",
+      "suitable_hero": "瑶、明世隐、大乔、扁鹊"
+    },
+    {
+      "name": "献祭",
+      "attr_detail": { "法术攻击": 2.4, "冷却缩减": 0.7 },
+      "attr_desc": "+2.4法术攻击，+0.7%冷却缩减",
+      "suitable_role": "爆发型法师、炮台法师",
+      "suitable_hero": "妲己、安琪拉、小乔、干将莫邪"
+    },
+    {
+      "name": "敬畏",
+      "attr_detail": { "物理防御": 5.9, "法术吸血": 0.7 },
+      "attr_desc": "+5.9物理防御，+0.7%法术吸血",
+      "suitable_role": "半肉法师、法坦",
+      "suitable_hero": "芈月、司马懿、扁鹊、梦奇"
+    }
+  ]
+}
