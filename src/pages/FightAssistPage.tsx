@@ -3,7 +3,7 @@ import { Swords, Info } from 'lucide-react';
 
 export default function FightAssistPage() {
   return (
-    <div className="min-h-screen bg-bg-page relative overflow-hidden flex flex-col">
+    <div className="h-full bg-bg-page relative overflow-hidden flex flex-col">
       {/* 动态背景装饰 */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2" />
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-success/5 rounded-full blur-[120px] translate-y-1/2" />

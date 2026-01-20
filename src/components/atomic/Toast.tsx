@@ -28,7 +28,7 @@ export const Toast = ({ message, duration = 2000, onClose, type = 'info' }: Toas
 
   return createPortal(
     <div className={`
-      fixed top-10 left-1/2 -translate-x-1/2 z-[100]
+      fixed top-10 left-1/2 -translate-x-1/2 z-100
       ${isVisible ? 'animate-in fade-in slide-in-from-top-4' : 'animate-out fade-out slide-out-to-top-4'}
       duration-300
     `}>

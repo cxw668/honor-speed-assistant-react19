@@ -105,7 +105,7 @@ export const HeroSelect = ({
       {/* 下拉面板 */}
       {isOpen && (
         <div className={`
-          ${isStatic ? 'relative mt-0 border-0 shadow-none flex-1 flex flex-col min-h-0' : 'absolute top-full left-0 right-0 mt-2 border-2 border-border-light shadow-2xl z-[100]'} 
+          ${isStatic ? 'relative mt-0 border-0 shadow-none flex-1 flex flex-col min-h-0' : 'absolute top-full left-0 right-0 mt-2 border-2 border-border-light shadow-2xl z-100'} 
           bg-bg-card rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200
         `}>
           {/* 已选择英雄展示区 - 仅在 Static 模式（对战辅助）下显示 */}

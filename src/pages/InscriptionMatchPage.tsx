@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { HeroSelect } from '../components/business/HeroSelect';
-import { CopyBtn } from '../components/atomic/CopyBtn';
-import { Button } from '../components/atomic/Button';
 import { Toast } from '../components/atomic/Toast';
-import { InscriptionSimulation } from '../components/business/InscriptionSimulation';
-import { Zap, LayoutGrid } from 'lucide-react';
-import { heroList } from '../mock/hero/index';
+import { InscriptionSimulation, type InscriptionSimulationHandle } from '../components/business/InscriptionSimulation';
+import { CopyBtn } from '../components/atomic/CopyBtn';
+import { Zap, RotateCcw } from 'lucide-react';
+import { useHeroData } from '../hooks/useHeroData';
 import heroDetailsData from '../mock/hero/hero_details.json';
 import inscriptionListData from '../mock/equipment/inscriptionList.json';
 
@@ -28,23 +27,39 @@ interface InscriptionRecommendation {
 }
 
 // 计算默认选中的英雄 ID（hero_details.json 中的第一条数据）
-const getDefaultHeroId = () => {
-  const firstHeroName = (heroDetailsData as any[])[0]?.name;
-  if (!firstHeroName) return 1;
-  const allHeroes = Object.values(heroList).flatMap(list => list);
-  const foundHero = allHeroes.find(h => h.heroName === firstHeroName);
-  return foundHero?.id || 1;
-};
+// const getDefaultHeroId = () => {
+//   const firstHeroName = (heroDetailsData as any[])[0]?.name;
+//   if (!firstHeroName) return 1;
+//   const allHeroes = Object.values(heroList).flatMap(list => list);
+//   const foundHero = allHeroes.find(h => h.heroName === firstHeroName);
+//   return foundHero?.id || 1;
+// };
 
 export default function InscriptionMatchPage() {
-  const [selectedHeroId, setSelectedHeroId] = useState<number>(getDefaultHeroId());
+  const { heroList: allHeroes } = useHeroData();
+  const simulationRef = useRef<InscriptionSimulationHandle>(null);
+  
+  // 计算默认选中的英雄 ID
+  const defaultHeroId = useMemo(() => {
+    const firstHeroName = (heroDetailsData as any[])[0]?.name;
+    if (!firstHeroName) return 1;
+    const baseName = firstHeroName.replace(/\(.*\)/, '').trim();
+    const foundHero = allHeroes.find(h => h.heroName === baseName);
+    return foundHero?.id || 1;
+  }, [allHeroes]);
+
+  const [selectedHeroId, setSelectedHeroId] = useState<number>(0);
+
+  useEffect(() => {
+    if (selectedHeroId === 0 && defaultHeroId !== 0) {
+      setSelectedHeroId(defaultHeroId);
+    }
+  }, [defaultHeroId, selectedHeroId]);
+
   const [currentInscriptions, setCurrentInscriptions] = useState<Inscription[]>([]);
   const [recommendDesc, setRecommendDesc] = useState<string>('');
   const [showToast, setShowToast] = useState(false);
-  const [toastMsg, _setToastMsg] = useState('');
-  const [adjustingIdx, setAdjustingIdx] = useState<number | null>(null);
-  const [adjustTip, setAdjustTip] = useState<string | null>(null);
-  const [isSimulationMode, setIsSimulationMode] = useState(false);
+  const [toastMsg] = useState('');
 
   // 铭文类型映射
   const inscriptionTypeMap: Record<string, 'red' | 'blue' | 'green'> = {
@@ -61,7 +76,6 @@ export default function InscriptionMatchPage() {
 
   // 获取英雄名称的辅助函数
   const getHeroNameById = (id: number) => {
-    const allHeroes = Object.values(heroList).flatMap(list => list);
     const hero = allHeroes.find(h => h.id === id);
     return hero?.heroName || '';
   };
@@ -69,9 +83,12 @@ export default function InscriptionMatchPage() {
   // 监听英雄或场景变化
   useEffect(() => {
     const heroName = getHeroNameById(selectedHeroId);
+    if (!heroName) return;
     
     // 优先从 hero_details.json 获取数据
-    const heroDetail = (heroDetailsData as any[]).find(h => h.name === heroName);
+    const heroDetail = (heroDetailsData as any[]).find(h => 
+      h.name === heroName || h.name.startsWith(`${heroName}(`)
+    );
     
     if (heroDetail && heroDetail.inscriptions) {
       const insList = heroDetail.inscriptions.list.map((ins: any) => ({
@@ -95,7 +112,7 @@ export default function InscriptionMatchPage() {
         setRecommendDesc('');
       }
     }
-  }, [selectedHeroId]);
+  }, [selectedHeroId, allHeroes]);
 
   const copyText = useMemo(() => {
     if (currentInscriptions.length === 0) return '';
@@ -103,183 +120,92 @@ export default function InscriptionMatchPage() {
     return `${combo} → ${recommendDesc}`;
   }, [currentInscriptions, recommendDesc]);
 
-  const handleCountAdjust = (index: number, delta: number) => {
-    const newList = [...currentInscriptions];
-    const newCount = Math.min(10, Math.max(1, newList[index].count + delta));
-    
-    if (newCount === newList[index].count) return;
-
-    newList[index] = { ...newList[index], count: newCount };
-    setCurrentInscriptions(newList);
-
-    // 显示调整提示
-    const recommendation = (inscriptionListData as InscriptionRecommendation[]).find(
-      item => item.heroId === selectedHeroId
-    );
-    if (recommendation) {
-      setAdjustTip(delta > 0 ? recommendation.adjustTips.increase : recommendation.adjustTips.decrease);
-      setTimeout(() => setAdjustTip(null), 2000);
-    }
-  };
-
-  const getInscriptionIcon = (type: string) => {
-    // 这里可以使用颜色块或简单的图标代替
-    const colors = {
-      red: 'bg-red-500',
-      blue: 'bg-blue-500',
-      green: 'bg-green-500'
-    };
-    return colors[type as keyof typeof colors] || 'bg-gray-400';
-  };
-
   return (
     <div className="h-full flex flex-col bg-bg-page overflow-hidden">
-      {/* 顶部选择区 */}
-      <div className="h-[120px] md:h-[80px] flex flex-col md:flex-row items-center justify-center gap-6 px-6 bg-bg-card shadow-sm shrink-0 z-50">
-        <div className="w-full md:w-64">
-          <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
-        </div>
-      </div>
-
       {/* 主体展示区 */}
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-        <div className="max-w-4xl mx-auto flex flex-col gap-8 pb-10">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex flex-col">
-              <h2 className="text-2xl font-black text-text-primary tracking-tight">铭文搭配</h2>
-              <p className="text-xs text-text-secondary mt-1">
-                {isSimulationMode ? '模拟真实铭文搭配，实时查看属性加成' : '查看推荐铭文组合与实战微调建议'}
-              </p>
+      <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto w-full h-full flex flex-col gap-6">
+          
+          {/* 英雄选择与头部信息 - 集成到 content */}
+          <div className="max-h-[150px] bg-bg-card rounded-[24px] border border-white/10 p-5 flex items-center gap-8 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700">
+            <div className="shrink-0 group">
+              <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-[20px] overflow-hidden border-2 border-primary/20 group-hover:border-primary/50 transition-all duration-500 shadow-lg">
+                <img
+                  src={allHeroes.find(h => h.id === selectedHeroId)?.heroSrc || allHeroes.find(h => h.id === selectedHeroId)?.avatar}
+                  alt="Hero"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-2 left-0 right-0 text-center">
+                  <span className="text-white font-black tracking-tight text-xs">
+                    {getHeroNameById(selectedHeroId)}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center bg-bg-card p-1 rounded-2xl border border-border-light shadow-sm">
-              <button
-                onClick={() => setIsSimulationMode(false)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                  !isSimulationMode 
-                    ? 'bg-primary text-white shadow-md' 
-                    : 'text-text-secondary hover:text-primary hover:bg-primary/5'
-                }`}
-              >
-                <LayoutGrid size={16} />
-                方案推荐
-              </button>
-              <button
-                onClick={() => setIsSimulationMode(true)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                  isSimulationMode 
-                    ? 'bg-primary text-white shadow-md' 
-                    : 'text-text-secondary hover:text-primary hover:bg-primary/5'
-                }`}
-              >
-                <Zap size={16} />
-                实战模拟
-              </button>
+
+            <div className="flex-1 flex items-center justify-between gap-6">
+              <div className="space-y-1 hidden lg:block">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-4 bg-primary rounded-full shadow-[0_0_8px_rgba(255,159,0,0.8)]" />
+                  <h2 className="text-lg font-black text-white tracking-tight">铭文搭配实验室</h2>
+                </div>
+                <p className="text-text-secondary text-[11px] font-medium">模拟真实铭文搭配，实时查看属性加成</p>
+              </div>
+
+              <div className="flex-1 flex items-center gap-4 max-w-2xl">
+                <div className="flex-1 space-y-1.5">
+                  <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest px-1">更换目标英雄</label>
+                  <div className="bg-white/5 rounded-xl p-1 border border-white/10 hover:border-primary/30 transition-colors">
+                    <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-end h-[42px] mb-0.5">
+                  <div className="flex gap-1.5">
+                    {allHeroes.find(h => h.id === selectedHeroId)?.heroTypes.map(type => (
+                      <span key={type} className="px-2 py-1 bg-primary/10 text-primary text-[9px] font-black rounded-lg border border-primary/20 uppercase">
+                        {type}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2">
+                <button 
+                  onClick={() => simulationRef.current?.applyRecommended()}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xl text-xs font-bold transition-all border border-primary/20"
+                >
+                  <Zap size={14} fill="currentColor" />
+                  一键套用
+                </button>
+                <button 
+                  onClick={() => simulationRef.current?.clear()}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-red-500/10 text-text-secondary hover:text-red-500 rounded-xl text-xs font-bold transition-all border border-white/10 hover:border-red-500/50"
+                >
+                  <RotateCcw size={14} />
+                  重置
+                </button>
+                <div className="w-40 flex flex-col justify-center">
+                  <CopyBtn 
+                    text={copyText} 
+                    title={recommendDesc?.replace('Tips：', '')} 
+                    className="w-full"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {isSimulationMode ? (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <InscriptionSimulation recommendedInscriptions={currentInscriptions} />
-            </div>
-          ) : currentInscriptions.length > 0 ? (
-            <>
-              <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex items-center justify-between mb-6 px-2">
-                  <h3 className="title">推荐铭文组合</h3>
-                  <span className="text-xs text-text-secondary">点击数量可进行微调</span>
-                </div>
-
-                <div className="flex flex-col gap-6">
-                  {currentInscriptions.map((ins, idx) => (
-                    <div 
-                      key={`${ins.name}-${idx}`}
-                      className="group flex items-center justify-between p-6 bg-bg-card rounded-3xl shadow-md border-2 border-transparent hover:border-primary/20 transition-all"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full ${getInscriptionIcon(ins.type)} flex items-center justify-center text-white font-bold text-xl shadow-inner`}>
-                          {ins.name[0]}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-text-primary text-lg">{ins.name}</h4>
-                          <p className="text-text-secondary text-xs mt-0.5">5级铭文</p>
-                        </div>
-                      </div>
-
-                      <div className="relative">
-                        <button
-                          onClick={() => setAdjustingIdx(adjustingIdx === idx ? null : idx)}
-                          className="flex items-center gap-2 px-4 py-2 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/10 transition-colors"
-                        >
-                          <span className="text-primary font-bold text-xl">×{ins.count}</span>
-                          <svg className={`w-4 h-4 text-primary transition-transform ${adjustingIdx === idx ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-
-                        {/* 数量调整弹窗 */}
-                        {adjustingIdx === idx && (
-                          <div className="absolute top-full right-0 mt-2 p-3 bg-bg-card rounded-2xl shadow-xl border border-border-light z-20 flex items-center gap-4 animate-in fade-in zoom-in-95 duration-200">
-                            <button 
-                              onClick={() => handleCountAdjust(idx, -1)}
-                              className="w-10 h-10 flex items-center justify-center rounded-xl bg-bg-page hover:bg-primary/10 text-text-primary hover:text-primary transition-colors border border-border-light"
-                            >
-                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-                            </button>
-                            <span className="text-xl font-bold text-primary w-8 text-center">{ins.count}</span>
-                            <button 
-                              onClick={() => handleCountAdjust(idx, 1)}
-                              className="w-10 h-10 flex items-center justify-center rounded-xl bg-bg-page hover:bg-primary/10 text-text-primary hover:text-primary transition-colors border border-border-light"
-                            >
-                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* 实时调整提示 */}
-              {adjustTip && (
-                <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-3 bg-primary/90 text-white rounded-full shadow-2xl font-bold animate-in zoom-in fade-in duration-300 z-[100]">
-                  调整后效果：{adjustTip}
-                </div>
-              )}
-
-              <section className="bg-bg-card p-8 rounded-[40px] shadow-lg border-2 border-primary/10 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
-                <h4 className="title text-center mb-6">铭文方案说明</h4>
-                <div className="flex flex-col items-center gap-4">
-                  <div className="flex items-center gap-2 flex-wrap justify-center text-lg font-medium text-text-primary">
-                    {currentInscriptions.map((ins, i) => (
-                      <span key={i} className="flex items-center gap-1">
-                        {ins.name}×{ins.count}
-                        {i < currentInscriptions.length - 1 && <span className="text-primary/40 mx-1">+</span>}
-                      </span>
-                    ))}
-                    <span className="text-primary mx-3">→</span>
-                    <span className="text-primary font-bold">
-                      {recommendDesc.replace('Tips：', '')}
-                    </span>
-                  </div>
-                  <p className="text-text-secondary text-center text-sm leading-relaxed mt-4 max-w-md">
-                    铭文是前期的核心优势。这套组合能让你在开局就拥有不俗的属性，更容易打出优势。
-                  </p>
-                </div>
-                <div className="mt-8">
-                  <CopyBtn text={copyText} />
-                </div>
-              </section>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-text-secondary gap-4">
-              <div className="p-6 bg-bg-card rounded-full shadow-inner">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-              </div>
-              <p className="font-bold">暂无该英雄的铭文推荐数据</p>
-              <Button variant="secondary" size="sm" onClick={() => setSelectedHeroId(1)}>返回默认推荐</Button>
-            </div>
-          )}
+          <div className="h-[calc(100%-150px)] flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <InscriptionSimulation 
+              ref={simulationRef}
+              recommendedInscriptions={currentInscriptions} 
+              recommendDesc={recommendDesc}
+              copyText={copyText}
+            />
+          </div>
         </div>
       </div>
 

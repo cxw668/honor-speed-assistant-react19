@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { 
   DndContext, 
   DragOverlay, 
@@ -33,6 +33,8 @@ interface InscriptionData {
 
 interface InscriptionSimulationProps {
   recommendedInscriptions?: { name: string; count: number; type: string }[];
+  recommendDesc?: string;
+  copyText?: string;
   onClose?: () => void;
 }
 
@@ -172,10 +174,25 @@ function InscriptionSlot({
   );
 }
 
-export function InscriptionSimulation({ recommendedInscriptions, onClose:_onClose }: InscriptionSimulationProps) {
+export interface InscriptionSimulationHandle {
+  applyRecommended: () => void;
+  clear: () => void;
+}
+
+export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, InscriptionSimulationProps>(({ 
+  recommendedInscriptions, 
+  recommendDesc:_recommendDesc,
+  copyText:_copyText,
+  onClose: _onClose 
+}, ref) => {
   const [slots, setSlots] = useState<Record<string, InscriptionData | null>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<InscriptionData | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    applyRecommended: handleApplyRecommended,
+    clear: handleClear
+  }));
 
   // 定义铭文池网格坐标 (基于六边形网格系统)
   // x: 水平轴 (列), y: 垂直轴 (行)
@@ -340,54 +357,26 @@ export function InscriptionSimulation({ recommendedInscriptions, onClose:_onClos
   };
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-300">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-            <Zap size={24} fill="currentColor" />
-          </div>
-          <div>
-            <h3 className="font-black text-xl text-text-primary tracking-tight">铭文模拟器</h3>
-            <p className="text-[10px] text-text-secondary font-medium uppercase tracking-wider">Drag & Match Simulation</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={handleApplyRecommended}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-xl text-xs font-bold transition-all shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
-          >
-            <Zap size={14} fill="currentColor" />
-            一键套用推荐
-          </button>
-          <button 
-            onClick={handleClear}
-            className="flex items-center gap-2 px-4 py-2 bg-bg-card hover:bg-red-500/10 text-text-secondary hover:text-red-500 rounded-xl text-xs font-bold transition-all border border-border-light hover:border-red-500/50"
-          >
-            <RotateCcw size={14} />
-            全部重置
-          </button>
-        </div>
-      </div>
-
+    <div className="h-full flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-300">
       <DndContext 
         sensors={sensors} 
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col lg:flex-row gap-6 bg-[#0a192f] p-4 md:p-8 rounded-[40px] border border-white/10 shadow-2xl overflow-hidden relative min-h-[600px]">
+        <div className="flex-1 flex flex-col lg:flex-row gap-6 bg-[#0a192f] p-4 md:p-8 rounded-[40px] border border-white/10 shadow-2xl overflow-hidden relative">
           {/* 背景装饰纹理 */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5 pointer-events-none" />
+          <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-primary/5 via-transparent to-blue-500/5 pointer-events-none" />
 
           {/* 左侧：选择铭文池 */}
           <div className="lg:w-1/4 flex flex-col gap-4 relative z-10">
-            <div className="bg-white/[0.03] backdrop-blur-xl p-5 rounded-[32px] border border-white/10 h-full flex flex-col">
+            <div className="bg-white/3 backdrop-blur-xl p-5 rounded-[32px] border border-white/10 h-full flex flex-col">
               <div className="flex items-center gap-2 mb-6 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] px-1">
                 <LayoutGrid size={12} />
                 Epigraph Warehouse
               </div>
               
-              <div className="flex flex-col gap-8 overflow-y-auto pr-2 custom-scrollbar flex-1 max-h-[600px]">
+              <div className="flex flex-col gap-8 overflow-y-auto pr-2 custom-scrollbar flex-1">
                 {(['red', 'blue', 'green'] as const).map(type => (
                   <div key={type} className="flex flex-col gap-4">
                     <div className="flex items-center justify-between px-1">
@@ -412,8 +401,8 @@ export function InscriptionSimulation({ recommendedInscriptions, onClose:_onClos
           </div>
 
           {/* 中间：六边形网格铭文池 */}
-          <div className="lg:w-2/4 flex items-center justify-center min-h-[500px] relative z-10 py-10">
-            <div className="relative w-full max-w-[500px] aspect-square flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center min-h-0 relative z-10 py-10">
+            <div className="relative w-full max-w-[500px] aspect-square flex items-center justify-center scale-90 lg:scale-100">
               {/* 中心装饰 */}
               <div className="absolute w-32 h-32 opacity-10 pointer-events-none">
                 <Zap size={128} className="text-primary" fill="currentColor" />
@@ -450,7 +439,7 @@ export function InscriptionSimulation({ recommendedInscriptions, onClose:_onClos
           {/* 右侧：属性面板 */}
           <div className="lg:w-1/4 flex flex-col gap-6 relative z-10">
             {/* 总等级 */}
-            <div className="bg-white/[0.03] backdrop-blur-xl p-8 rounded-[32px] border border-white/10 flex flex-col items-center group hover:bg-white/[0.05] transition-colors">
+            <div className="bg-white/3 backdrop-blur-xl p-8 rounded-[32px] border border-white/10 flex flex-col items-center group hover:bg-white/5 transition-colors">
               <div className="relative mb-4">
                 <div 
                   className="w-24 h-24 flex flex-col items-center justify-center border-2 border-primary/30 text-primary group-hover:border-primary transition-colors"
@@ -468,13 +457,9 @@ export function InscriptionSimulation({ recommendedInscriptions, onClose:_onClos
             </div>
 
             {/* 属性列表 */}
-            <div className="bg-white/[0.03] backdrop-blur-xl p-6 rounded-[32px] border border-white/10 flex-1 flex flex-col">
-              <div className="flex items-center gap-2 mb-6 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/10 pb-3">
-                <Info size={12} />
-                Attribute Bonus
-              </div>
+            <div className="bg-white/3 backdrop-blur-xl p-6 rounded-[32px] border border-white/10 flex-1 flex flex-col">
               
-              <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                 {Object.keys(totalStats).length > 0 ? (
                   Object.entries(totalStats).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between group/item">
@@ -493,8 +478,8 @@ export function InscriptionSimulation({ recommendedInscriptions, onClose:_onClos
                     </div>
                   ))
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center py-20 opacity-20">
-                    <div className="w-12 h-12 border border-white/50 rounded-full flex items-center justify-center mb-4" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+                  <div className="flex-1 flex flex-col items-center justify-center opacity-20 p-6">
+                    <div className="w-12 h-12 border border-white/50 rounded-full flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
                       <RotateCcw size={20} />
                     </div>
                     <p className="text-[10px] font-bold italic tracking-widest uppercase">No Attributes</p>
@@ -525,4 +510,4 @@ export function InscriptionSimulation({ recommendedInscriptions, onClose:_onClos
       </DndContext>
     </div>
   );
-}
+});
