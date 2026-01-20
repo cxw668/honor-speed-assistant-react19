@@ -4,7 +4,7 @@ import { CopyBtn } from '../components/atomic/CopyBtn';
 import { Button } from '../components/atomic/Button';
 import { Toast } from '../components/atomic/Toast';
 import { InscriptionSimulation } from '../components/business/InscriptionSimulation';
-import { Zap, LayoutGrid, Info } from 'lucide-react';
+import { Zap, LayoutGrid } from 'lucide-react';
 import { heroList } from '../mock/hero/index';
 import heroDetailsData from '../mock/hero/hero_details.json';
 import inscriptionListData from '../mock/equipment/inscriptionList.json';
@@ -135,7 +135,7 @@ export default function InscriptionMatchPage() {
   return (
     <div className="h-full flex flex-col bg-bg-page overflow-hidden">
       {/* 顶部选择区 */}
-      <div className="h-[120px] md:h-[80px] flex flex-col md:flex-row items-center justify-center gap-6 px-6 bg-bg-card shadow-sm shrink-0 z-10">
+      <div className="h-[120px] md:h-[80px] flex flex-col md:flex-row items-center justify-center gap-6 px-6 bg-bg-card shadow-sm shrink-0 z-50">
         <div className="w-full md:w-64">
           <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
         </div>

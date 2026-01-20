@@ -146,7 +146,7 @@ export default function EquipmentRecommendPage() {
       {activeTab === 'equipment' ? (
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* 顶部选择区: 80px */}
-          <div className="h-[120px] md:h-[80px] flex flex-col md:flex-row items-center justify-center gap-6 shadow-sm shrink-0 z-10 bg-bg-card border-b border-border-light">
+          <div className="h-[120px] md:h-[80px] flex flex-col md:flex-row items-center justify-center gap-6 shadow-sm shrink-0 z-50 bg-bg-card border-b border-border-light">
             <div className="flex w-full md:w-64">
               <label className='text-desc text-sm font-bold min-w-14 mr-1'>英雄名称</label>
               <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
