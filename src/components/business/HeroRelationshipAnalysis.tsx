@@ -28,16 +28,44 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     if (!selectingSlot) return;
     
     const { team, index } = selectingSlot;
+    const currentTeam = team === 'my' ? [...myTeam] : [...enemyTeam];
+    
+    // 如果当前槽位已有英雄且点击了同一个英雄，不做处理（实际上 HeroSelect 已经处理了禁用）
+    if (currentTeam[index] === heroId) return;
+
+    // 更新当前点击的槽位
+    currentTeam[index] = heroId;
+    
     if (team === 'my') {
-      const newTeam = [...myTeam];
-      newTeam[index] = heroId;
-      setMyTeam(newTeam);
+      setMyTeam(currentTeam);
     } else {
-      const newTeam = [...enemyTeam];
-      newTeam[index] = heroId;
-      setEnemyTeam(newTeam);
+      setEnemyTeam(currentTeam);
     }
-    setSelectingSlot(null);
+
+    // 智能跳转：寻找下一个空槽位
+    const nextEmptyIndex = currentTeam.findIndex((id, idx) => idx > index && id === null);
+    if (nextEmptyIndex !== -1) {
+      setSelectingSlot({ team, index: nextEmptyIndex });
+    }
+    // 如果没有下一个空位了，保持当前状态，让用户手动关闭或继续修改
+  };
+
+  const handleRemoveHero = (heroId: number) => {
+    if (!selectingSlot) return;
+    const { team } = selectingSlot;
+    const currentTeam = team === 'my' ? [...myTeam] : [...enemyTeam];
+    
+    const indexToRemove = currentTeam.indexOf(heroId);
+    if (indexToRemove !== -1) {
+      currentTeam[indexToRemove] = null;
+      if (team === 'my') {
+        setMyTeam(currentTeam);
+      } else {
+        setEnemyTeam(currentTeam);
+      }
+      // 移除后，将选择目标设为刚才移除的那个空位
+      setSelectingSlot({ team, index: indexToRemove });
+    }
   };
 
   const clearTeams = () => {
@@ -260,6 +288,9 @@ export const HeroRelationshipAnalysis: React.FC = () => {
               value={selectingSlot.team === 'my' ? (myTeam[selectingSlot.index] || 0) : (enemyTeam[selectingSlot.index] || 0)} 
               onChange={handleSelectHero} 
               isStatic={true}
+              selectedIds={selectingSlot.team === 'my' ? myTeam.filter((id): id is number => id !== null) : enemyTeam.filter((id): id is number => id !== null)}
+              onRemove={handleRemoveHero}
+              maxSelect={5}
             />
           </div>
           <div className="mt-4 text-center text-xs text-text-secondary italic">
