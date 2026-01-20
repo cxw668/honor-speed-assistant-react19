@@ -2,13 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { HeroSelect } from './HeroSelect';
 import { Swords, Users, ShieldAlert, Zap, TrendingUp, Info, Trash2, X } from 'lucide-react';
 import heroDetailsData from '../../mock/hero/hero_details.json';
-import { heroList, heroAvatarList } from '../../mock/hero/index';
-
-interface Hero {
-  id: number;
-  heroName: string;
-  heroSrc: string;
-}
+import { useHeroData } from '../../hooks/useHeroData';
 
 interface RelationshipData {
   heroes: { ename: string; cname: string }[];
@@ -24,12 +18,8 @@ interface HeroDetail {
   };
 }
 
-const allHeroes = Object.values(heroList).flat().map(hero => ({
-  ...hero,
-  heroSrc: heroAvatarList.find(a => a.hero === hero.heroName)?.hero_src || ''
-}));
-
 export const HeroRelationshipAnalysis: React.FC = () => {
+  const { heroList: allHeroes } = useHeroData();
   const [myTeam, setMyTeam] = useState<(number | null)[]>(Array(5).fill(null));
   const [enemyTeam, setEnemyTeam] = useState<(number | null)[]>(Array(5).fill(null));
   const [selectingSlot, setSelectingSlot] = useState<{ team: 'my' | 'enemy', index: number } | null>(null);
@@ -63,91 +53,115 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     const mySuppression: { hero: string; enemy: string; desc: string }[] = [];
     const enemySuppression: { enemy: string; hero: string; desc: string }[] = [];
 
+    // 辅助函数：获取英雄的所有详情（处理多职业，如元流之子）
+    const getHeroDetails = (heroName: string) => {
+      return (heroDetailsData as HeroDetail[]).filter(d => 
+        d.name === heroName || d.name.startsWith(`${heroName}(`)
+      );
+    };
+
     // 1. 分析最佳搭档 (己方内部)
     myHeroes.forEach(hero => {
-      const detail = (heroDetailsData as HeroDetail[]).find(d => d.name === hero?.heroName);
-      if (detail?.relationships?.["最佳搭档"]) {
-        detail.relationships["最佳搭档"].heroes.forEach((p, idx) => {
-          if (myHeroes.some(h => h?.heroName === p.cname)) {
-            if (!partnerships.some(item => (item.hero === hero!.heroName && item.partner === p.cname) || (item.hero === p.cname && item.partner === hero!.heroName))) {
-              partnerships.push({
-                hero: hero!.heroName,
-                partner: p.cname,
-                desc: detail.relationships!["最佳搭档"]!.descriptions[idx]
-              });
+      if (!hero) return;
+      const details = getHeroDetails(hero.heroName);
+      
+      details.forEach(detail => {
+        if (detail.relationships?.["最佳搭档"]) {
+          detail.relationships["最佳搭档"].heroes.forEach((p, idx) => {
+            if (myHeroes.some(h => h?.heroName === p.cname || p.cname.startsWith(`${h?.heroName}(`))) {
+              if (!partnerships.some(item => (item.hero === hero.heroName && item.partner === p.cname) || (item.hero === p.cname && item.partner === hero.heroName))) {
+                partnerships.push({
+                  hero: hero.heroName,
+                  partner: p.cname,
+                  desc: detail.relationships!["最佳搭档"]!.descriptions[idx]
+                });
+              }
             }
-          }
-        });
-      }
+          });
+        }
+      });
     });
 
     // 2. 分析压制关系 (己方 vs 敌方)
-    // 检查己方英雄的克制列表
     myHeroes.forEach(hero => {
-      const detail = (heroDetailsData as HeroDetail[]).find(d => d.name === hero?.heroName);
+      if (!hero) return;
+      const details = getHeroDetails(hero.heroName);
       
-      // 己方压制敌方
-      if (detail?.relationships?.["压制英雄"]) {
-        detail.relationships["压制英雄"].heroes.forEach((e, idx) => {
-          if (enemyHeroes.some(h => h?.heroName === e.cname)) {
-            mySuppression.push({
-              hero: hero!.heroName,
-              enemy: e.cname,
-              desc: detail.relationships!["压制英雄"]!.descriptions[idx]
-            });
-          }
-        });
-      }
-
-      // 己方被敌方压制
-      if (detail?.relationships?.["被压制英雄"]) {
-        detail.relationships["被压制英雄"].heroes.forEach((e, idx) => {
-          if (enemyHeroes.some(h => h?.heroName === e.cname)) {
-            enemySuppression.push({
-              enemy: e.cname,
-              hero: hero!.heroName,
-              desc: detail.relationships!["被压制英雄"]!.descriptions[idx]
-            });
-          }
-        });
-      }
-    });
-
-    // 补充：检查敌方英雄的克制列表 (双向分析)
-    enemyHeroes.forEach(enemy => {
-      const detail = (heroDetailsData as HeroDetail[]).find(d => d.name === enemy?.heroName);
-      
-      // 敌方压制己方
-      if (detail?.relationships?.["压制英雄"]) {
-        detail.relationships["压制英雄"].heroes.forEach((p, idx) => {
-          if (myHeroes.some(h => h?.heroName === p.cname)) {
-            // 如果还没记录这个关系，则添加
-            if (!enemySuppression.some(s => s.enemy === enemy!.heroName && s.hero === p.cname)) {
-              enemySuppression.push({
-                enemy: enemy!.heroName,
-                hero: p.cname,
+      details.forEach(detail => {
+        // 己方压制敌方
+        if (detail.relationships?.["压制英雄"]) {
+          detail.relationships["压制英雄"].heroes.forEach((e, idx) => {
+            if (enemyHeroes.some(h => h?.heroName === e.cname || e.cname.startsWith(`${h?.heroName}(`))) {
+              mySuppression.push({
+                hero: hero.heroName,
+                enemy: e.cname,
                 desc: detail.relationships!["压制英雄"]!.descriptions[idx]
               });
             }
-          }
-        });
-      }
+          });
+        }
+      });
+    });
 
-      // 敌方被己方压制
-      if (detail?.relationships?.["被压制英雄"]) {
-        detail.relationships["被压制英雄"].heroes.forEach((p, idx) => {
-          if (myHeroes.some(h => h?.heroName === p.cname)) {
-            // 如果还没记录这个关系，则添加
-            if (!mySuppression.some(s => s.hero === p.cname && s.enemy === enemy!.heroName)) {
-              mySuppression.push({
-                hero: p.cname,
-                enemy: enemy!.heroName,
-                desc: detail.relationships!["被压制英雄"]!.descriptions[idx]
-              });
+    // 3. 分析被压制关系 (己方 vs 敌方)
+    myHeroes.forEach(hero => {
+      if (!hero) return;
+      const details = getHeroDetails(hero.heroName);
+      
+      details.forEach(detail => {
+        // 己方被敌方压制
+        if (detail.relationships?.["被压制英雄"]) {
+          detail.relationships["被压制英雄"].heroes.forEach((e, idx) => {
+            if (enemyHeroes.some(h => h?.heroName === e.cname || e.cname.startsWith(`${h?.heroName}(`))) {
+              if (!enemySuppression.some(s => s.enemy === e.cname && s.hero === hero.heroName)) {
+                enemySuppression.push({
+                  enemy: e.cname,
+                  hero: hero.heroName,
+                  desc: detail.relationships!["被压制英雄"]!.descriptions[idx]
+                });
+              }
             }
-          }
-        });
-      }
+          });
+        }
+      });
+    });
+
+    // 4. 双向分析：检查敌方英雄的克制关系
+    enemyHeroes.forEach(enemy => {
+      if (!enemy) return;
+      const details = getHeroDetails(enemy.heroName);
+      
+      details.forEach(detail => {
+        // 敌方压制己方
+        if (detail.relationships?.["压制英雄"]) {
+          detail.relationships["压制英雄"].heroes.forEach((p, idx) => {
+            if (myHeroes.some(h => h?.heroName === p.cname || p.cname.startsWith(`${h?.heroName}(`))) {
+              if (!enemySuppression.some(s => s.enemy === enemy.heroName && s.hero === p.cname)) {
+                enemySuppression.push({
+                  enemy: enemy.heroName,
+                  hero: p.cname,
+                  desc: detail.relationships!["压制英雄"]!.descriptions[idx]
+                });
+              }
+            }
+          });
+        }
+
+        // 敌方被己方压制
+        if (detail.relationships?.["被压制英雄"]) {
+          detail.relationships["被压制英雄"].heroes.forEach((p, idx) => {
+            if (myHeroes.some(h => h?.heroName === p.cname || p.cname.startsWith(`${h?.heroName}(`))) {
+              if (!mySuppression.some(s => s.hero === p.cname && s.enemy === enemy.heroName)) {
+                mySuppression.push({
+                  hero: p.cname,
+                  enemy: enemy.heroName,
+                  desc: detail.relationships!["被压制英雄"]!.descriptions[idx]
+                });
+              }
+            }
+          });
+        }
+      });
     });
 
     return { partnerships, mySuppression, enemySuppression };

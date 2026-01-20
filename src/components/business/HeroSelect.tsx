@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { heroList, heroAvatarList } from '../../mock/hero/index';
+import { useHeroData } from '../../hooks/useHeroData';
 
 interface HeroSelectProps {
   value: number | string;
@@ -8,6 +8,7 @@ interface HeroSelectProps {
 }
 
 export const HeroSelect = ({ value, onChange, isStatic = false }: HeroSelectProps) => {
+  const { heroList: allHeroes } = useHeroData();
   const [isOpen, setIsOpen] = useState(isStatic);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -19,18 +20,6 @@ export const HeroSelect = ({ value, onChange, isStatic = false }: HeroSelectProp
     }
   }, [isStatic]);
 
-  // 平铺所有英雄并关联头像
-  const allHeroes = useMemo(() => {
-    const heroes = Object.values(heroList).flatMap(list => list);
-    // 去重，因为一个英雄可能有多个职业
-    const uniqueHeroes = Array.from(new Map(heroes.map(h => [h.id, h])).values());
-    
-    return uniqueHeroes.map(hero => {
-      const avatar = heroAvatarList.find(a => a.hero === hero.heroName)?.hero_src;
-      return { ...hero, avatar };
-    });
-  }, []);
-
   // 当前选中的英雄
   const selectedHero = useMemo(() => {
     return allHeroes.find(h => h.id === Number(value));
@@ -39,8 +28,10 @@ export const HeroSelect = ({ value, onChange, isStatic = false }: HeroSelectProp
   // 模糊搜索过滤
   const filteredHeroes = useMemo(() => {
     if (!searchTerm) return allHeroes;
+    const lowerSearch = searchTerm.toLowerCase();
     return allHeroes.filter(hero => 
-      hero.heroName.toLowerCase().includes(searchTerm.toLowerCase())
+      hero.heroName.toLowerCase().includes(lowerSearch) ||
+      hero.heroTypes.some(type => type.toLowerCase().includes(lowerSearch))
     );
   }, [allHeroes, searchTerm]);
 
@@ -74,7 +65,7 @@ export const HeroSelect = ({ value, onChange, isStatic = false }: HeroSelectProp
         >
           {selectedHero ? (
             <>
-              <img src={selectedHero.avatar} alt={selectedHero.heroName} className="w-8 h-8 rounded-lg shadow-sm" />
+              <img src={selectedHero.heroSrc} alt={selectedHero.heroName} className="w-8 h-8 rounded-lg shadow-sm" />
               <span className="text-text-primary font-bold text-lg flex-1">{selectedHero.heroName}</span>
             </>
           ) : (
@@ -129,10 +120,10 @@ export const HeroSelect = ({ value, onChange, isStatic = false }: HeroSelectProp
                   `}
                   onClick={() => handleSelect(hero.id)}
                 >
-                  <img src={hero.avatar} alt={hero.heroName} className="w-10 h-10 rounded-xl shadow-sm" />
+                  <img src={hero.heroSrc} alt={hero.heroName} className="w-10 h-10 rounded-xl shadow-sm" />
                   <div className="flex flex-col">
                     <span className="font-bold">{hero.heroName}</span>
-                    <span className="text-[10px] opacity-60">{hero.heroType}</span>
+                    <span className="text-[10px] opacity-60">{hero.heroTypes.join(' / ')}</span>
                   </div>
                   {Number(value) === hero.id && (
                     <svg className="ml-auto" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>

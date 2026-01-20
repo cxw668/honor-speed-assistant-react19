@@ -4,7 +4,7 @@ import { HeroSelect } from '../components/business/HeroSelect';
 import { EquipmentList } from '../components/business/EquipmentList';
 import { CopyBtn } from '../components/atomic/CopyBtn';
 import { Button } from '../components/atomic/Button';
-import { heroList } from '../mock/hero/index';
+import { useHeroData } from '../hooks/useHeroData';
 import heroDetailsData from '../mock/hero/hero_details.json';
 import summonerSkills from '../mock/equipment/summonerSkills.json';
 import toolsData from '../mock/equipment/tools.json';
@@ -32,26 +32,35 @@ interface EquipmentSet {
   tips: string;
 }
 
-// 计算默认选中的英雄 ID（hero_details.json 中的第一条数据）
-const getDefaultHeroId = () => {
-  const firstHeroName = (heroDetailsData as any[])[0]?.name;
-  if (!firstHeroName) return 1;
-  const allHeroes = Object.values(heroList).flatMap(list => list);
-  const foundHero = allHeroes.find(h => h.heroName === firstHeroName);
-  return foundHero?.id || 1;
-};
-
 export default function EquipmentRecommendPage() {
+  const { heroList: allHeroes } = useHeroData();
   const [searchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as 'equipment' | 'skills' | 'tools') || 'equipment';
-  const [selectedHeroId, setSelectedHeroId] = useState<number>(getDefaultHeroId()); 
+  
+  // 计算默认选中的英雄 ID（hero_details.json 中的第一条数据）
+  const defaultHeroId = useMemo(() => {
+    const firstHeroName = (heroDetailsData as any[])[0]?.name;
+    if (!firstHeroName) return 1;
+    // 处理名称，去除括号
+    const baseName = firstHeroName.replace(/\(.*\)/, '').trim();
+    const foundHero = allHeroes.find(h => h.heroName === baseName);
+    return foundHero?.id || 1;
+  }, [allHeroes]);
+
+  const [selectedHeroId, setSelectedHeroId] = useState<number>(0); 
+
+  useEffect(() => {
+    if (selectedHeroId === 0 && defaultHeroId !== 0) {
+      setSelectedHeroId(defaultHeroId);
+    }
+  }, [defaultHeroId, selectedHeroId]);
+
   const [equipmentSets, setEquipmentSets] = useState<EquipmentSet[]>([]);
   const [toolSearch, setToolSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(0);
 
   // 获取英雄名称的辅助函数
   const getHeroNameById = (id: number) => {
-    const allHeroes = Object.values(heroList).flatMap(list => list);
     const hero = allHeroes.find(h => h.id === id);
     return hero?.heroName || '';
   };
@@ -74,8 +83,10 @@ export default function EquipmentRecommendPage() {
   useEffect(() => {
     const heroName = getHeroNameById(selectedHeroId);
     
-    // 优先从 hero_details.json 获取数据
-    const heroDetail = (heroDetailsData as any[]).find(h => h.name === heroName);
+    // 优先从 hero_details.json 获取数据，支持多职业匹配
+    const heroDetail = (heroDetailsData as any[]).find(h => 
+      h.name === heroName || h.name.startsWith(`${heroName}(`)
+    );
     
     if (heroDetail && heroDetail.equipment && heroDetail.equipment.length > 0) {
       const sets = heroDetail.equipment.map((set: any) => ({

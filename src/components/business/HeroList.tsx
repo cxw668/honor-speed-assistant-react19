@@ -1,8 +1,7 @@
 import { HeroAvatar } from '../atomic/HeroAvatar';
-import type { HeroItem } from '../../types';
 
 interface HeroListProps {
-  heroes: HeroItem[];
+  heroes: any[];
   selectedHeroId?: number;
   onHeroSelect: (id: number) => void;
 }
@@ -21,7 +20,7 @@ export const HeroList = ({ heroes, selectedHeroId, onHeroSelect }: HeroListProps
       {heroes.map(hero => (
         <HeroAvatar
           key={hero.id}
-          src={hero.avatar}
+          src={hero.heroSrc || hero.avatar}
           name={hero.heroName}
           active={selectedHeroId === hero.id}
           onClick={() => onHeroSelect(hero.id)}

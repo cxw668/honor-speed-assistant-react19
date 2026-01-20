@@ -1,7 +1,5 @@
-import type { HeroItem } from '../../types';
-
 interface HeroDetailCardProps {
-  hero?: HeroItem;
+  hero?: any;
 }
 
 export const HeroDetailCard = ({ hero }: HeroDetailCardProps) => {
@@ -25,11 +23,16 @@ export const HeroDetailCard = ({ hero }: HeroDetailCardProps) => {
           <span className="text-yellow-400 text-[20px] drop-shadow-sm">{renderStars(hero.difficulty)}</span>
         </div>
         <div className="flex gap-2 mt-1">
-          {hero.heroType && 
-            <span key={hero.heroType} className="bg-primary/20 text-primary px-3 py-1 rounded-lg text-[12px] font-bold border border-primary/20">
+          {hero.heroTypes?.map((type: string) => (
+            <span key={type} className="bg-primary/20 text-primary px-3 py-1 rounded-lg text-[12px] font-bold border border-primary/20">
+              {type}
+            </span>
+          ))}
+          {!hero.heroTypes && hero.heroType && (
+            <span className="bg-primary/20 text-primary px-3 py-1 rounded-lg text-[12px] font-bold border border-primary/20">
               {hero.heroType}
             </span>
-          }
+          )}
           {hero.isNewbieRecommend && (
             <span className="bg-success/20 text-success px-3 py-1 rounded-lg text-[12px] font-bold border border-success/20">
               新手推荐

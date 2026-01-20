@@ -4,7 +4,7 @@ import { HeroList } from '../components/business/HeroList';
 import { HeroDetailCard } from '../components/business/HeroDetailCard';
 import { HeroSearch } from '../components/atomic/HeroSearch';
 import { Dialog } from '../components/atomic/Dialog';
-import { heroList, heroAvatarList } from '../mock/hero/index';
+import { useHeroData } from '../hooks/useHeroData';
 
 const HERO_TYPES = [
   { id: 0, name: '全部' },
@@ -17,39 +17,27 @@ const HERO_TYPES = [
 ];
 
 export const HeroQueryPage = () => {
+  const { heroList: allHeroes } = useHeroData();
   const [selectedType, setSelectedType] = useState('全部');
   const [isNoviceOnly, setIsNoviceOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHeroId, setSelectedHeroId] = useState<number | undefined>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // 合并英雄数据与头像
-  const heroesWithAvatars = useMemo(() => {
-    // 将 Record<string, HeroItem[]> 展平为 HeroItem[]
-    const allHeroes = Object.values(heroList).flat();
-    return allHeroes.map(hero => {
-      const avatarMap = heroAvatarList.find(a => a.hero === hero.heroName);
-      return {
-        ...hero,
-        avatar: avatarMap?.hero_src
-      };
-    });
-  }, []);
-
   // 使用 useMemo 缓存筛选后的英雄列表
   const filteredHeroes = useMemo(() => {
-    return heroesWithAvatars.filter(hero => {
-      const typeMatch = selectedType === '全部' || hero.heroType === selectedType;
+    return allHeroes.filter(hero => {
+      const typeMatch = selectedType === '全部' || hero.heroTypes.includes(selectedType);
       const noviceMatch = !isNoviceOnly || hero.isNewbieRecommend;
       const searchMatch = !searchQuery || hero.heroName.toLowerCase().includes(searchQuery.toLowerCase());
       return typeMatch && noviceMatch && searchMatch;
     });
-  }, [heroesWithAvatars, selectedType, isNoviceOnly, searchQuery]);
+  }, [allHeroes, selectedType, isNoviceOnly, searchQuery]);
 
   // 获取当前选中的英雄详情
   const selectedHero = useMemo(() => {
-    return heroesWithAvatars.find(h => h.id === selectedHeroId);
-  }, [heroesWithAvatars, selectedHeroId]);
+    return allHeroes.find(h => h.id === selectedHeroId);
+  }, [allHeroes, selectedHeroId]);
 
   // 处理英雄选择
   const handleHeroSelect = (id: number) => {
@@ -57,26 +45,23 @@ export const HeroQueryPage = () => {
     setIsDialogOpen(true);
   };
 
-  // 计算英雄数量，以为英雄可能有多种职业，因此使用名称统计
-  const totalList = filteredHeroes.reduce((acc, cur) => {
-    (acc as Record<string, number>)[cur.heroName] = ((acc as Record<string, number>)[cur.heroName] || 0) + 1;
-    return acc;
-  }, {});
-  const total = Object.values(totalList).flat().length;
+  // 计算英雄数量
+  const total = filteredHeroes.length;
+
   // 计算各类型的英雄数量统计
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {
-      '全部': total,
-      '坦克': heroList['坦克'].length,
-      '战士': heroList['战士'].length,
-      '刺客': heroList['刺客'].length,
-      '辅助': heroList['辅助'].length,
-      '射手': heroList['射手'].length,
-      '法师': heroList['法师'].length,
+      '全部': allHeroes.length,
+      '坦克': allHeroes.filter(h => h.heroTypes.includes('坦克')).length,
+      '战士': allHeroes.filter(h => h.heroTypes.includes('战士')).length,
+      '刺客': allHeroes.filter(h => h.heroTypes.includes('刺客')).length,
+      '辅助': allHeroes.filter(h => h.heroTypes.includes('辅助')).length,
+      '射手': allHeroes.filter(h => h.heroTypes.includes('射手')).length,
+      '法师': allHeroes.filter(h => h.heroTypes.includes('法师')).length,
     };
 
     return counts;
-  }, [heroesWithAvatars]);
+  }, [allHeroes]);
 
   return (
     <div className="page-container flex overflow-hidden mt-6 ml-4">
