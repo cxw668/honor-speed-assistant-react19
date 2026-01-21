@@ -48,12 +48,12 @@ export const useHeroData = () => {
     return Array.from(heroMap.values());
   }, []);
 
-  return {
+  return useMemo(() => ({
     heroList: processedHeroList,
     // 提供一个按职业过滤的方法
     getHeroesByType: (type: string) => {
       if (type === '全部') return processedHeroList;
       return processedHeroList.filter(hero => hero.heroTypes.includes(type));
     }
-  };
+  }), [processedHeroList]);
 };

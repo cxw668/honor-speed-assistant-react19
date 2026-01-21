@@ -1,3 +1,4 @@
+import { Box, Typography } from '@mui/material';
 import { HeroAvatar } from '../atomic/HeroAvatar';
 
 interface HeroListProps {
@@ -9,14 +10,13 @@ interface HeroListProps {
 export const HeroList = ({ heroes, selectedHeroId, onHeroSelect }: HeroListProps) => {
   if (heroes.length === 0) {
     return (
-      <div className="flex justify-center items-center h-40 card">
-        <p className="text-desc">暂无匹配英雄</p>
-      </div>
+      <Box className="flex justify-center items-center h-40 card">
+        <Typography className="text-desc">暂无匹配英雄</Typography>
+      </Box>
     );
   }
-
   return (
-    <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 p-inner card overflow-y-auto flex-1 scrollbar-beauty">
+    <Box className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 p-inner card overflow-y-auto flex-1 scrollbar-beauty">
       {heroes.map(hero => (
         <HeroAvatar
           key={hero.id}
@@ -26,6 +26,6 @@ export const HeroList = ({ heroes, selectedHeroId, onHeroSelect }: HeroListProps
           onClick={() => onHeroSelect(hero.id)}
         />
       ))}
-    </div>
+    </Box>
   );
 };

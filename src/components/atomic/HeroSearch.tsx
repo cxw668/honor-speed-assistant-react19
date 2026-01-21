@@ -1,4 +1,5 @@
 import { Search, X } from 'lucide-react';
+import { Box, InputBase, IconButton } from '@mui/material';
 
 interface HeroSearchProps {
   value: string;
@@ -8,25 +9,65 @@ interface HeroSearchProps {
 
 export const HeroSearch = ({ value, onChange, placeholder = "搜索英雄名称..." }: HeroSearchProps) => {
   return (
-    <div className="relative w-full group">
-      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary group-focus-within:text-primary transition-colors duration-200">
+    <Box sx={{ position: 'relative', width: '100%', '&:hover .MuiInputBase-root': { borderColor: 'primary.main' } }}>
+      <Box sx={{ 
+        position: 'absolute', 
+        left: 14, 
+        top: '50%', 
+        transform: 'translateY(-50%)', 
+        color: 'text.secondary',
+        zIndex: 1,
+        transition: 'color 0.2s',
+        '.MuiInputBase-root.Mui-focused ~ &': { color: 'primary.main' }
+      }}>
         <Search size={18} />
-      </div>
-      <input
-        type="text"
+      </Box>
+      <InputBase
+        fullWidth
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-11 pl-11 pr-10 py-2 bg-bg-page/50 border border-border-light rounded-xl text-[15px] text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-bg-page transition-all duration-300"
+        sx={{
+          height: 44,
+          pl: '44px',
+          pr: value ? '40px' : '14px',
+          bgcolor: 'rgba(0,0,0,0.2)',
+          border: '1px solid',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderRadius: '12px',
+          fontSize: '15px',
+          color: 'text.primary',
+          transition: 'all 0.3s',
+          '&.Mui-focused': {
+            borderColor: 'primary.main',
+            boxShadow: '0 0 0 2px rgba(255,159,0,0.1)',
+            bgcolor: 'rgba(0,0,0,0.3)',
+          },
+          '& input::placeholder': {
+            color: 'text.secondary',
+            opacity: 0.5,
+          }
+        }}
       />
       {value && (
-        <button
+        <IconButton
           onClick={() => onChange('')}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-text-secondary hover:text-white hover:bg-white/10 transition-all cursor-pointer border-none bg-transparent"
+          size="small"
+          sx={{
+            position: 'absolute',
+            right: 10,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'text.secondary',
+            '&:hover': {
+              color: '#fff',
+              bgcolor: 'rgba(255,255,255,0.1)',
+            }
+          }}
         >
           <X size={16} />
-        </button>
+        </IconButton>
       )}
-    </div>
+    </Box>
   );
 };

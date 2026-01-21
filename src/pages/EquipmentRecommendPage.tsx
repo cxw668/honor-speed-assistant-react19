@@ -1,9 +1,31 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import {
+  Box,
+  Typography,
+  Button as MuiButton,
+  Stack,
+  Paper,
+  Grid,
+  Avatar,
+  TextField,
+  InputAdornment,
+  useTheme,
+  alpha,
+  IconButton,
+  Tooltip
+} from '@mui/material';
+import {
+  Search,
+  Shield,
+  Zap,
+  Hammer,
+  RotateCcw,
+  AlertCircle
+} from 'lucide-react';
 import { HeroSelect } from '../components/business/HeroSelect';
 import { EquipmentList } from '../components/business/EquipmentList';
 import { CopyBtn } from '../components/atomic/CopyBtn';
-import { Button } from '../components/atomic/Button';
 import { useHeroData } from '../hooks/useHeroData';
 import heroDetailsData from '../mock/hero/hero_details.json';
 import summonerSkills from '../mock/equipment/summonerSkills.json';
@@ -33,6 +55,7 @@ interface EquipmentSet {
 }
 
 export default function EquipmentRecommendPage() {
+  const theme = useTheme();
   const { heroList: allHeroes } = useHeroData();
   const [searchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as 'equipment' | 'skills' | 'tools') || 'equipment';
@@ -142,357 +165,603 @@ export default function EquipmentRecommendPage() {
   };
 
   return (
-    <div className="h-full bg-bg-page overflow-hidden flex flex-col">
-      {/* 顶部标签切换 - 已根据需求注释，转为二级导航形式 
-      <div className="flex justify-center bg-bg-card border-b border-white/5 py-2 shrink-0">
-        <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
-          {[
-            { id: 'equipment', label: '出装推荐' },
-            { id: 'skills', label: '召唤师技能' },
-            { id: 'tools', label: '局内道具' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                const params = new URLSearchParams(searchParams);
-                params.set('tab', tab.id);
-                window.location.hash = `#/equipment?${params.toString()}`;
+    <Box sx={{ height: '100%', bgcolor: 'background.default', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* 左侧二级导航菜单 */}
+        <Box
+          component="aside"
+          sx={{
+            width: { xs: 80, md: 280 },
+            shrink: 0,
+            borderRight: '1px solid',
+            borderColor: alpha(theme.palette.divider, 0.1),
+            bgcolor: alpha(theme.palette.background.paper, 0.4),
+            backdropFilter: 'blur(20px)',
+            display: 'flex',
+            flexDirection: 'column',
+            py: 4,
+            px: 2,
+            gap: 1
+          }}
+        >
+          <Box sx={{ px: 2, mb: 4, display: { xs: 'none', md: 'block' } }}>
+            <Typography
+              variant="overline"
+              sx={{
+                fontWeight: 900,
+                color: 'text.secondary',
+                letterSpacing: '0.2em',
+                opacity: 0.6
               }}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all border-none cursor-pointer ${
-                activeTab === tab.id 
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                  : 'text-text-secondary hover:text-white hover:bg-white/5'
-              }`}
             >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      */}
+              实验室模块
+            </Typography>
+          </Box>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* 左侧二级导航菜单 - 区分于一级导航，体现层级感 */}
-        <aside className="w-20 md:w-64 shrink-0 border-r border-white/5 bg-bg-card/30 backdrop-blur-md flex flex-col py-8 px-4 gap-2">
-          <div className="px-4 mb-6 hidden md:block">
-            <h3 className="text-[11px] font-black text-text-secondary uppercase tracking-[0.2em] opacity-50">实验室模块</h3>
-          </div>
           {[
-            { id: 'equipment', label: '出装推荐', icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg> },
-            { id: 'skills', label: '召唤师技能', icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 14 4-4 4 4-4 4-4-4z" /><path d="M3.34 7a10 10 0 1 1 17.32 0" /></svg> },
-            { id: 'tools', label: '局内道具', icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg> }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                const params = new URLSearchParams(searchParams);
-                params.set('tab', tab.id);
-                window.location.hash = `#/equipment?${params.toString()}`;
-              }}
-              className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 border-none cursor-pointer group ${activeTab === tab.id
-                ? 'bg-primary text-white shadow-xl shadow-primary/20 translate-x-1'
-                : 'text-text-secondary hover:text-white hover:bg-white/5'
-                }`}
-            >
-              <span className={`shrink-0 transition-transform duration-300 ${activeTab === tab.id ? 'scale-110' : 'group-hover:scale-110'}`}>
-                {tab.icon}
-              </span>
-              <span className="font-bold text-sm hidden md:block tracking-wide">{tab.label}</span>
-              {activeTab === tab.id && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white] hidden md:block animate-pulse" />
-              )}
-            </button>
-          ))}
+            { id: 'equipment', label: '出装推荐', icon: <Shield size={20} /> },
+            { id: 'skills', label: '召唤师技能', icon: <Zap size={20} /> },
+            { id: 'tools', label: '局内道具', icon: <Hammer size={20} /> }
+          ].map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <MuiButton
+                key={tab.id}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('tab', tab.id);
+                  window.location.hash = `#/equipment?${params.toString()}`;
+                }}
+                startIcon={<Box sx={{ display: { xs: 'none', md: 'flex' } }}>{tab.icon}</Box>}
+                sx={{
+                  justifyContent: { xs: 'center', md: 'flex-start' },
+                  px: { xs: 0, md: 3 },
+                  py: 2,
+                  borderRadius: 4,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  color: isActive ? 'primary.main' : 'text.secondary',
+                  bgcolor: isActive ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                  fontWeight: 800,
+                  fontSize: '15px',
+                  '&:hover': {
+                    bgcolor: isActive ? alpha(theme.palette.primary.main, 0.15) : alpha(theme.palette.action.hover, 0.05),
+                    color: isActive ? 'primary.main' : 'text.primary',
+                    transform: 'translateX(4px)'
+                  },
+                  '& .MuiButton-startIcon': {
+                    mr: { xs: 0, md: 2 },
+                    color: isActive ? 'primary.main' : 'inherit',
+                    transition: 'transform 0.3s',
+                    transform: isActive ? 'scale(1.1)' : 'none'
+                  }
+                }}
+              >
+                <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, tracking: '0.02em' }}>
+                  {tab.label}
+                </Box>
+                {isActive && (
+                  <Box
+                    sx={{
+                      display: { xs: 'none', md: 'block' },
+                      ml: 'auto',
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      boxShadow: `0 0 10px ${theme.palette.primary.main}`
+                    }}
+                  />
+                )}
+                <Box sx={{ display: { xs: 'flex', md: 'none' } }}>{tab.icon}</Box>
+              </MuiButton>
+            );
+          })}
 
           {/* 底部装饰 */}
-          <div className="mt-auto p-4 hidden md:block">
-            <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-              <p className="text-[10px] text-text-secondary leading-relaxed font-medium">
-                当前版本: v1.0.4<br />
-                数据同步: 实时
-              </p>
-            </div>
-          </div>
-        </aside>
+          <Box sx={{ mt: 'auto', p: 2, display: { xs: 'none', md: 'block' } }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.5,
+                borderRadius: 4,
+                bgcolor: alpha(theme.palette.action.hover, 0.05),
+                border: '1px solid',
+                borderColor: alpha(theme.palette.divider, 0.05)
+              }}
+            >
+              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontWeight: 600, mb: 0.5 }}>
+                当前版本: v1.0.4
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main', animation: 'pulse 2s infinite' }} />
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                  数据实时同步
+                </Typography>
+              </Stack>
+            </Paper>
+          </Box>
+        </Box>
 
         {/* 主内容区 */}
-        <div className="flex-1 overflow-hidden flex flex-col p-4 md:p-6 gap-6">
-          <div className="max-w-[1600px] mx-auto w-full h-full flex flex-col gap-6 overflow-hidden">
+        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: { xs: 2, md: 4 } }}>
+          <Box sx={{ maxWidth: '1600px', mx: 'auto', w: '100%', h: '100%', display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
             {activeTab === 'equipment' ? (
-              <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-                {/* 英雄选择面板 - 更加紧凑的设计 */}
-                <div className="shrink-0 bg-bg-card rounded-[24px] border border-white/10 p-5 flex items-center gap-8 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700">
-                  <div className="shrink-0 group">
-                    <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-[20px] overflow-hidden border-2 border-primary/20 group-hover:border-primary/50 transition-all duration-500 shadow-lg">
-                      <img
-                        src={allHeroes.find(h => h.id === selectedHeroId)?.heroSrc || allHeroes.find(h => h.id === selectedHeroId)?.avatar}
-                        alt="Hero"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-2 left-0 right-0 text-center">
-                        <span className="text-white font-black tracking-tight text-xs">
-                          {getHeroNameById(selectedHeroId)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
+                {/* 英雄选择面板 */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 6,
+                    border: '1px solid',
+                    borderColor: alpha(theme.palette.divider, 0.1),
+                    bgcolor: alpha(theme.palette.background.paper, 0.6),
+                    backdropFilter: 'blur(20px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    zIndex: 150,
+                    animation: 'fadeInDown 0.7s ease-out'
+                  }}
+                >
+                  <Box sx={{ position: 'relative', flexShrink: 0 }}>
+                    <Avatar
+                      src={allHeroes.find(h => h.id === selectedHeroId)?.heroSrc || allHeroes.find(h => h.id === selectedHeroId)?.avatar}
+                      variant="rounded"
+                      sx={{
+                        width: { xs: 80, md: 96 },
+                        height: { xs: 80, md: 96 },
+                        borderRadius: 5,
+                        border: '2px solid',
+                        borderColor: alpha(theme.palette.primary.main, 0.2),
+                        boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.2)}`
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        bgcolor: alpha(theme.palette.common.black, 0.6),
+                        backdropFilter: 'blur(4px)',
+                        py: 0.5,
+                        textAlign: 'center',
+                        borderBottomLeftRadius: 20,
+                        borderBottomRightRadius: 20
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ color: 'common.white', fontWeight: 900 }}>
+                        {getHeroNameById(selectedHeroId)}
+                      </Typography>
+                    </Box>
+                  </Box>
 
-                  <div className="flex-1 flex items-center justify-between gap-6">
-                    <div className="space-y-1 hidden lg:block">
-                      <div className="flex items-center gap-2">
-                        <div className="w-1 h-4 bg-primary rounded-full shadow-[0_0_8px_rgba(255,159,0,0.8)]" />
-                        <h2 className="text-lg font-black text-white tracking-tight">智能出装实验室</h2>
-                      </div>
-                      <p className="text-text-secondary text-[11px] font-medium">官网实时同步最优方案</p>
-                    </div>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 3 }}>
+                    <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+                      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                        <Box sx={{ width: 4, height: 16, bgcolor: 'primary.main', borderRadius: 1, boxShadow: `0 0 8px ${theme.palette.primary.main}` }} />
+                        <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', tracking: '-0.02em' }}>
+                          智能出装实验室
+                        </Typography>
+                      </Stack>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                        官网实时同步最优方案
+                      </Typography>
+                    </Box>
 
-                    <div className="flex-1 flex items-center gap-4 max-w-2xl">
-                      <div className="flex-1 space-y-1.5">
-                        <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest px-1">更换目标英雄</label>
-                        <div className="bg-white/5 rounded-xl p-1 border border-white/10 hover:border-primary/30 transition-colors">
+                    <Box sx={{ flex: 1, maxWidth: 600 }}>
+                      <Typography variant="overline" sx={{ display: 'block', mb: 0.5, color: 'text.secondary', fontWeight: 900, letterSpacing: '0.1em' }}>
+                        更换目标英雄
+                      </Typography>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Box sx={{ width: 380, bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 3, p: 0.5, border: '1px solid', borderColor: alpha(theme.palette.divider, 0.1) }}>
                           <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
-                        </div>
-                      </div>
+                        </Box>
+                        <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                          <Stack direction="row" spacing={1}>
+                            {allHeroes.find(h => h.id === selectedHeroId)?.heroTypes.map(type => (
+                              <Box
+                                key={type}
+                                sx={{
+                                  px: 1.5,
+                                  py: 0.5,
+                                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                  color: 'primary.main',
+                                  fontSize: '10px',
+                                  fontWeight: 900,
+                                  borderRadius: 2,
+                                  border: '1px solid',
+                                  borderColor: alpha(theme.palette.primary.main, 0.2),
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {type}
+                              </Box>
+                            ))}
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    </Box>
 
-                      <div className="hidden sm:flex flex-col justify-end space-y-1.5">
-                        <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest px-1">实战数据</label>
-                        <div className="flex gap-2 bg-white/5 rounded-xl p-2 border border-white/10 h-[42px] items-center px-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] text-text-secondary font-bold">胜率</span>
-                            <span className="text-[11px] font-black text-success">--</span>
-                          </div>
-                          <div className="w-px h-3 bg-white/10" />
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] text-text-secondary font-bold">登场</span>
-                            <span className="text-[11px] font-black text-white">--</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col justify-end h-[42px] mb-0.5">
-                        <div className="flex gap-1.5">
-                          {allHeroes.find(h => h.id === selectedHeroId)?.heroTypes.map(type => (
-                            <span key={type} className="px-2 py-1 bg-primary/10 text-primary text-[9px] font-black rounded-lg border border-primary/20 uppercase">
-                              {type}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="shrink-0">
+                    <Box sx={{ width: 160 }}>
                       <CopyBtn text={copyText} />
-                    </div>
-                  </div>
-                </div>
+                    </Box>
+                  </Box>
+                </Paper>
 
                 {equipmentSets.length > 0 ? (
-                  <div className="flex-1 overflow-hidden flex flex-col gap-4">
-                    <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-5 overflow-hidden">
+                  <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <Grid container spacing={3} sx={{ flex: 1, overflow: 'hidden' }}>
                       {equipmentSets.slice(0, 2).map((set, setIdx) => (
-                        <div 
-                          key={setIdx} 
-                          className="flex flex-col bg-bg-card rounded-[24px] border border-white/10 shadow-lg hover:border-primary/20 transition-all animate-in fade-in zoom-in-95 duration-500 relative z-10 hover:z-30" 
-                          style={{ animationDelay: `${setIdx * 100}ms` }}
-                        >
-                          {/* 方案头部 */}
-                          <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-sm font-black shadow-md shadow-primary/20">
-                                {setIdx + 1}
-                              </div>
-                              <div>
-                                <h3 className="text-sm font-black text-white tracking-tight">推荐方案</h3>
-                                <p className="text-[9px] text-text-secondary font-bold uppercase tracking-widest">Official Set</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-lg border border-white/5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                              <span className="text-[9px] text-text-secondary font-black">同步中</span>
-                            </div>
-                          </div>
-
-                          {/* 装备列表区 - 自动填充剩余空间 */}
-                          <div className="flex-1 p-5 flex flex-col gap-4">
-                            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 shrink-0">
-                              <EquipmentList 
-                                onUpdateList={()=>{}} 
-                                list={set.items} 
-                                tooltipSide={setIdx === 0 ? 'right' : 'left'}
-                              />
-                            </div>
-
-                            {set.tips && (
-                              <div className="flex-1 flex flex-col min-h-0">
-                                <div className="flex items-center gap-2 px-1 mb-2 shrink-0">
-                                  <div className="w-1 h-1 rounded-full bg-primary" />
-                                  <h4 className="text-[10px] font-black text-text-secondary uppercase tracking-widest">思路分析</h4>
-                                </div>
-                                <div className="flex-1 p-4 bg-linear-to-br from-primary/10 via-transparent to-transparent border border-primary/10 rounded-2xl relative group/tips overflow-y-auto scrollbar-beauty">
-                                  <p className="text-[11px] text-text-primary leading-relaxed font-medium italic">
-                                    “{set.tips.replace('Tips：', '')}”
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-32 text-text-secondary gap-6">
-                    <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center border border-white/10 animate-pulse">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xl font-black text-white tracking-tight">暂无出装数据</p>
-                      <p className="text-sm text-text-secondary mt-1">请尝试选择其他英雄</p>
-                    </div>
-                    <Button variant="primary" size="lg" onClick={() => setSelectedHeroId(1)}>
-                      重置为默认英雄
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : activeTab === 'skills' ? (
-              <div className="flex-1 overflow-y-auto scrollbar-hide px-2">
-                <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 pb-10">
-                  {summonerSkills.map((skill, index) => (
-                    <div
-                      key={skill.name}
-                      className="flex items-center gap-4 p-5 bg-bg-card rounded-[24px] border border-white/10 shadow-lg hover:border-primary/30 transition-all animate-in fade-in slide-in-from-bottom-4 duration-500"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div className="relative shrink-0">
-                        <img src={skill.icon} alt={skill.name} className="w-16 h-16 rounded-[16px] shadow-2xl relative z-10" />
-                        <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full z-0" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-black text-white text-lg tracking-tight mb-0.5">{skill.name}</h4>
-                        <p className="text-text-secondary text-[12px] leading-snug font-medium line-clamp-2">{skill.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {/* 搜索与分类区 - 固定在顶部 */}
-                <div className="mb-6 flex flex-col items-center gap-4 shrink-0">
-                  <div className="relative w-full max-w-lg group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary group-focus-within:text-primary transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="搜索局内道具名称..."
-                      className="w-full pl-11 pr-11 py-3 bg-bg-card border-2 border-white/5 rounded-xl text-sm focus:outline-none focus:border-primary/30 transition-all shadow-xl"
-                      value={toolSearch}
-                      onChange={(e) => setToolSearch(e.target.value)}
-                    />
-                    {toolSearch && (
-                      <button
-                        onClick={() => setToolSearch('')}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary hover:text-white transition-colors border-none bg-transparent cursor-pointer"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-hide">
-                    {CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setActiveCategory(cat.id)}
-                        className={`px-5 py-1.5 rounded-lg text-[11px] font-black transition-all whitespace-nowrap border-2 ${activeCategory === cat.id
-                          ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
-                          : 'bg-white/5 text-text-secondary border-transparent hover:border-white/10 hover:text-white'
-                          }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto scrollbar-hide px-1">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 pb-10">
-                    {filteredTools.length > 0 ? (
-                      filteredTools.map((tool, index) => {
-                        const toolInfo = getToolDetail(tool.tool);
-                        const isLastInRow = (index + 1) % 6 === 0;
-                        const isSecondToLastInRow = (index + 1) % 6 === 5;
-                        const showTooltipLeft = isLastInRow || isSecondToLastInRow;
-
-                        return (
-                          <div
-                            key={`${tool.tool}-${index}`}
-                            className="group relative flex flex-col items-center gap-3 p-4 bg-bg-card rounded-[24px] border border-white/5 hover:border-primary/30 hover:shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-300"
-                            style={{ animationDelay: `${Math.min(index * 10, 500)}ms` }}
+                        <Grid size={{ xs: 12, lg: 6 }} key={setIdx} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              flex: 1,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              borderRadius: 6,
+                              border: '1px solid',
+                              borderColor: alpha(theme.palette.divider, 0.1),
+                              bgcolor: alpha(theme.palette.background.paper, 0.6),
+                              backdropFilter: 'blur(20px)',
+                              overflow: 'hidden',
+                              transition: 'all 0.3s',
+                              animation: `fadeInUp 0.5s ease-out ${setIdx * 0.1}s both`,
+                              '&:hover': {
+                                borderColor: alpha(theme.palette.primary.main, 0.2),
+                                boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.2)}`
+                              }
+                            }}
                           >
-                            <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-[20px] overflow-hidden shadow-2xl">
-                              <img
-                                src={tool.tool_src}
-                                alt={tool.tool}
-                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                                loading="lazy"
-                              />
-                              <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                            <span className="text-[13px] font-bold text-text-primary text-center group-hover:text-primary transition-colors">
-                              {tool.tool}
-                            </span>
+                            {/* 方案头部 */}
+                            <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: alpha(theme.palette.divider, 0.05), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <Stack direction="row" spacing={2} alignItems="center">
+                                <Box sx={{
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: 3,
+                                  bgcolor: 'primary.main',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'white',
+                                  fontWeight: 900,
+                                  fontSize: '18px',
+                                  boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.3)}`
+                                }}>
+                                  {setIdx + 1}
+                                </Box>
+                                <Box>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.primary', lineHeight: 1.2 }}>
+                                    官方推荐方案
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                    Official Pro Set
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                              <Box sx={{ px: 1.5, py: 0.5, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 2, border: '1px solid', borderColor: alpha(theme.palette.success.main, 0.2), display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main', animation: 'pulse 2s infinite' }} />
+                                <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 900 }}>同步中</Typography>
+                              </Box>
+                            </Box>
 
-                            <div className={`
-                              absolute top-0 w-72 p-5 bg-bg-card/95 backdrop-blur-xl border border-white/10 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-110 pointer-events-none
-                              ${showTooltipLeft ? 'right-[calc(100%+16px)]' : 'left-[calc(100%+16px)]'}
-                            `}>
-                              <div className={`
-                                absolute top-8 border-10 border-transparent
-                                ${showTooltipLeft ? 'left-full border-l-bg-card/95' : 'right-full border-r-bg-card/95'}
-                              `}></div>
-                              <div className="flex flex-col gap-4">
-                                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                                  <h5 className="text-primary font-black text-base tracking-tight">{tool.tool}</h5>
-                                  <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 rounded-full">
-                                    <span className="text-yellow-500 font-black text-[11px]">¥ {toolInfo?.price}</span>
-                                  </div>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                  <div
-                                    className="text-text-primary text-[12px] leading-relaxed font-medium [&>p]:mb-2 [&>p:last-child]:mb-0"
-                                    dangerouslySetInnerHTML={{ __html: toolInfo?.stats }}
-                                  />
-                                  {toolInfo?.passive && (
-                                    <div
-                                      className="pt-3 border-t border-white/5 text-primary text-[12px] leading-relaxed italic [&>p]:mb-2 [&>p:last-child]:mb-0"
-                                      dangerouslySetInnerHTML={{ __html: toolInfo.passive }}
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="col-span-full py-32 flex flex-col items-center justify-center text-text-secondary gap-4">
-                        <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                        </div>
-                        <p className="font-bold text-lg">未找到相关道具</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                            {/* 装备列表区 */}
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
+                              <Box sx={{ bgcolor: alpha(theme.palette.action.hover, 0.03), borderRadius: 4, border: '1px solid', borderColor: alpha(theme.palette.divider, 0.05) }}>
+                                <EquipmentList
+                                  onUpdateList={() => { }}
+                                  list={set.items}
+                                  tooltipSide={setIdx === 0 ? 'right' : 'left'}
+                                />
+                              </Box>
+
+                              {set.tips && (
+                                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                  <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1 }}>
+                                    <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
+                                    <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 900, letterSpacing: '0.1em' }}>
+                                      思路分析
+                                    </Typography>
+                                  </Stack>
+                                  <Box
+                                    sx={{
+                                      flex: 1,
+                                      p: 3,
+                                      bgcolor: alpha(theme.palette.primary.main, 0.03),
+                                      borderRadius: 4,
+                                      border: '1px solid',
+                                      borderColor: alpha(theme.palette.primary.main, 0.1),
+                                      overflowY: 'auto',
+                                      '&::-webkit-scrollbar': { width: '4px' },
+                                      '&::-webkit-scrollbar-thumb': { bgcolor: alpha(theme.palette.primary.main, 0.2), borderRadius: '4px' }
+                                    }}
+                                  >
+                                    <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.8, fontStyle: 'italic', fontWeight: 500 }}>
+                                      “{set.tips.replace('Tips：', '')}”
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              )}
+                            </Box>
+                          </Paper>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                ) : (
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                    <Box sx={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: '50%',
+                      bgcolor: alpha(theme.palette.action.hover, 0.05),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid',
+                      borderColor: alpha(theme.palette.divider, 0.1),
+                      animation: 'pulse 3s infinite'
+                    }}>
+                      <AlertCircle size={40} color={theme.palette.text.secondary} />
+                    </Box>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h5" sx={{ fontWeight: 900, color: 'text.primary', mb: 1 }}>
+                        暂无出装数据
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                        该英雄暂无官方推荐方案，请尝试选择其他英雄
+                      </Typography>
+                    </Box>
+                    <MuiButton
+                      variant="contained"
+                      startIcon={<RotateCcw size={18} />}
+                      onClick={() => setSelectedHeroId(1)}
+                      sx={{
+                        borderRadius: 3,
+                        px: 4,
+                        py: 1.5,
+                        fontWeight: 800,
+                        boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.2)}`
+                      }}
+                    >
+                      重置为默认英雄
+                    </MuiButton>
+                  </Box>
+                )}
+              </Box>
+            ) : activeTab === 'skills' ? (
+              <Box sx={{ flex: 1, overflowY: 'auto', px: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
+                <Grid container spacing={3} sx={{ maxWidth: 1000, mx: 'auto'}}>
+                  {summonerSkills.map((skill, index) => (
+                    <Grid size={{ xs: 12, md: 6 }} key={skill.name}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          borderRadius: 6,
+                          border: '1px solid',
+                          borderColor: alpha(theme.palette.divider, 0.1),
+                          bgcolor: alpha(theme.palette.background.paper, 0.6),
+                          backdropFilter: 'blur(20px)',
+                          transition: 'all 0.3s',
+                          animation: `fadeInUp 0.5s ease-out ${index * 0.05}s both`,
+                          '&:hover': {
+                            borderColor: alpha(theme.palette.primary.main, 0.3),
+                            transform: 'translateY(-4px)',
+                            boxShadow: `0 12px 24px ${alpha(theme.palette.common.black, 0.2)}`
+                          }
+                        }}
+                      >
+                        <Box sx={{ position: 'relative', shrink: 0 }}>
+                          <Avatar
+                            src={skill.icon}
+                            variant="rounded"
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 4,
+                              boxShadow: `0 8px 16px ${alpha(theme.palette.common.black, 0.3)}`
+                            }}
+                          />
+                          <Box sx={{ position: 'absolute', inset: 0, bgcolor: alpha(theme.palette.primary.main, 0.2), filter: 'blur(20px)', borderRadius: '50%', zIndex: -1 }} />
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', mb: 0.5, tracking: '-0.01em' }}>
+                            {skill.name}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {skill.description}
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            ) : (
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                {/* 搜索与分类区 */}
+                <Box sx={{ mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, shrink: 0 }}>
+                  <TextField
+                    fullWidth
+                    placeholder="搜索局内道具..."
+                    value={toolSearch}
+                    onChange={(e) => setToolSearch(e.target.value)}
+                    sx={{
+                      maxWidth: 600,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 4,
+                        bgcolor: alpha(theme.palette.background.paper, 0.6),
+                        backdropFilter: 'blur(20px)',
+                        transition: 'all 0.3s',
+                        '&:hover': { bgcolor: alpha(theme.palette.background.paper, 0.8) },
+                        '&.Mui-focused': { bgcolor: alpha(theme.palette.background.paper, 1) }
+                      }
+                    }}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search size={20} color={theme.palette.primary.main} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: toolSearch && (
+                          <InputAdornment position="end">
+                            <IconButton size="small" onClick={() => setToolSearch('')}>
+                              <RotateCcw size={16} />
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                  />
+
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'center', gap: 1.5 }}>
+                    {CATEGORIES.map(cat => {
+                      const isActive = activeCategory === cat.id;
+                      return (
+                        <MuiButton
+                          key={cat.id}
+                          variant={isActive ? 'contained' : 'text'}
+                          onClick={() => setActiveCategory(cat.id)}
+                          sx={{
+                            borderRadius: 3,
+                            px: 3,
+                            py: 1,
+                            fontWeight: 800,
+                            color: isActive ? 'white' : 'text.secondary',
+                            bgcolor: isActive ? 'primary.main' : alpha(theme.palette.action.hover, 0.05),
+                            border: '1px solid',
+                            borderColor: isActive ? 'primary.main' : 'transparent',
+                            '&:hover': {
+                              bgcolor: isActive ? 'primary.dark' : alpha(theme.palette.action.hover, 0.1),
+                              borderColor: isActive ? 'primary.dark' : alpha(theme.palette.divider, 0.1)
+                            }
+                          }}
+                        >
+                          {cat.name}
+                        </MuiButton>
+                      );
+                    })}
+                  </Stack>
+                </Box>
+
+                {/* 道具列表区 */}
+                <Box sx={{ flex: 1, overflowY: 'auto' }}>
+                  <Grid container spacing={2}>
+                    {filteredTools.map((tool, index) => {
+                      const detail = getToolDetail(tool.tool);
+                      return (
+                        <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2.4, xl: 2 }} key={tool.tool}>
+                          <Tooltip
+                            title={
+                              <Box 
+                                sx={{
+                                  p: 1.5,
+                                  maxWidth: 280,
+                                  bgcolor: (theme) => alpha(theme.palette.background.paper, 0.8),
+                                  backdropFilter: 'blur(12px)',
+                                  borderRadius: 2,
+                                  border: '1px solid',
+                                  borderColor: (theme) => alpha(theme.palette.divider, 0.1),
+                                  boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.common.black, 0.2)}`,
+                                }}
+                              >
+                                <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'primary.main', mb: 1.5, borderBottom: '1px solid', borderColor: (theme) => alpha(theme.palette.primary.main, 0.2), pb: 0.5 }}>
+                                  {tool.tool}
+                                </Typography>
+                                {detail?.found && (
+                                  <Stack spacing={1.5}>
+                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'success.main', fontWeight: 900 }}>
+                                      价格: {detail.price}
+                                    </Typography>
+                                    <Box>
+                                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 900, display: 'block', mb: 0.5, textTransform: 'uppercase' }}>属性</Typography>
+                                      <Typography variant="caption" sx={{ color: 'text.primary', lineHeight: 1.6, display: 'block' }}>{detail.stats.replace(/<[^>]+>/g, '')}</Typography>
+                                    </Box>
+                                    {detail.passive && (
+                                      <Box>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 900, display: 'block', mb: 0.5, textTransform: 'uppercase' }}>被动/主动</Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.primary', lineHeight: 1.6, display: 'block' }}>{detail.passive.replace(/<[^>]+>/g, '')}</Typography>
+                                      </Box>
+                                    )}
+                                  </Stack>
+                                )}
+                              </Box>
+                            }
+                            arrow
+                            placement="top"
+                            componentsProps={{
+                              tooltip: {
+                                sx: {
+                                  bgcolor: 'transparent',
+                                  p: 0,
+                                  '& .MuiTooltip-arrow': {
+                                    color: (theme) => alpha(theme.palette.background.paper, 0.8),
+                                  }
+                                }
+                              }
+                            }}
+                          >
+                            <Paper
+                              elevation={0}
+                              sx={{
+                                p: 2,
+                                // ml: 10.5,
+                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: 2,
+                                borderRadius: 5,
+                                border: '1px solid',
+                                borderColor: alpha(theme.palette.divider, 0.1),
+                                bgcolor: alpha(theme.palette.background.paper, 0.4),
+                                backdropFilter: 'blur(20px)',
+                                cursor: 'help',
+                                transition: 'all 0.3s',
+                                animation: `fadeInUp 0.4s ease-out ${index * 0.01}s both`,
+                                '&:hover': {
+                                  borderColor: 'primary.main',
+                                  bgcolor: alpha(theme.palette.background.paper, 0.8),
+                                  transform: 'scale(1.05)',
+                                  boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.2)}`
+                                }
+                              }}
+                            >
+                              <Avatar
+                                src={tool.tool_src}
+                                variant="rounded"
+                                sx={{
+                                  width: 56,
+                                  height: 56,
+                                  borderRadius: 3,
+                                  border: '1px solid',
+                                  borderColor: alpha(theme.palette.divider, 0.1)
+                                }}
+                              />
+                              <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.primary', textAlign: 'center' }}>
+                                {tool.tool}
+                              </Typography>
+                            </Paper>
+                          </Tooltip>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Box>
+              </Box>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

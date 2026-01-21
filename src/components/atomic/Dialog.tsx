@@ -1,14 +1,25 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Box, Typography, IconButton,type SxProps, type Theme, alpha } from '@mui/material';
+import { X } from 'lucide-react';
 
 interface DialogProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  sx?: SxProps<Theme>;
 }
 
-export const Dialog = ({ isOpen, onClose, title, children }: DialogProps) => {
+/**
+ * 弹窗组件
+ * @param isOpen 是否打开
+ * @param onClose 关闭回调
+ * @param title 标题
+ * @param children 内容
+ * @param sx 自定义样式
+ */
+export const Dialog = ({ isOpen, onClose, title, children, sx }: DialogProps) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -23,32 +34,105 @@ export const Dialog = ({ isOpen, onClose, title, children }: DialogProps) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <Box 
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1300,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: 2,
+      }}
+    >
       {/* Overlay */}
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      <Box 
         onClick={onClose}
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          bgcolor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(4px)',
+          animation: 'fadeIn 0.2s ease-out',
+          '@keyframes fadeIn': {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          }
+        }}
       />
       
       {/* Dialog Content */}
-      <div className="relative bg-bg-card w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden">
+      <Box 
+        sx={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '672px', // max-w-2xl
+          maxHeight: '90vh',
+          borderRadius: 4, // 16px
+          boxShadow: 24,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          bgcolor: (theme) => alpha(theme.palette.background.paper, 0.8),
+          backdropFilter: 'blur(20px)',
+          border: '1px solid',
+          borderColor: (theme) => alpha(theme.palette.divider, 0.1),
+          animation: 'zoomIn 0.2s ease-out',
+          '@keyframes zoomIn': {
+            from: { opacity: 0, transform: 'scale(0.95)' },
+            to: { opacity: 1, transform: 'scale(1)' },
+          },
+          ...sx
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border-light">
-          <h2 className="text-xl font-bold text-text-primary">{title}</h2>
-          <button 
+        <Box 
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            p: 3,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+            {title}
+          </Typography>
+          <IconButton 
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-text-secondary hover:text-text-primary"
+            size="small"
+            sx={{ 
+              color: 'text.secondary',
+              '&:hover': {
+                color: 'text.primary',
+                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+              }
+            }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+            <X size={20} />
+          </IconButton>
+        </Box>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+        <Box 
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            p: 3,
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.1),
+              borderRadius: '3px',
+            },
+          }}
+        >
           {children}
-        </div>
-      </div>
-    </div>,
+        </Box>
+      </Box>
+    </Box>,
     document.body
   );
 };

@@ -1,9 +1,14 @@
+import { ThemeContextProvider } from '@/context/ThemeContext';
+import CssBaseline from '@mui/material/CssBaseline';
 import AppRouter from "./router"
 
 function App() {
 
   return (
-    <AppRouter />
+    <ThemeContextProvider>
+      <CssBaseline />
+      <AppRouter />
+    </ThemeContextProvider>
   )
 }
 

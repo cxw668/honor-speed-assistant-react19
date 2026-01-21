@@ -1,4 +1,5 @@
 import { LayoutGrid, Shield, Swords, Zap, Wand2, Crosshair, Heart, Sparkles } from 'lucide-react';
+import { Box, Stack, Typography, ButtonBase, Switch } from '@mui/material';
 
 interface HeroType {
   id: number;
@@ -33,104 +34,230 @@ export const HeroTypeFilter = ({
   typeCounts = {}
 }: HeroTypeFilterProps) => {
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <div className="flex items-center gap-2 mb-4 px-1">
-          <div className="w-1 h-4 bg-primary rounded-full shadow-[0_0_8px_rgba(255,159,0,0.6)]" />
-          <h3 className="text-[13px] font-bold text-text-secondary uppercase tracking-wider">英雄定位</h3>
-        </div>
-        <div className="flex flex-col gap-2.5">
+    <Stack spacing={4}>
+      <Box>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2, px: 0.5 }}>
+          <Box sx={{ 
+            width: 4, 
+            height: 16, 
+            bgcolor: 'primary.main', 
+            borderRadius: '2px',
+            boxShadow: '0 0 8px rgba(255,159,0,0.6)'
+          }} />
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              fontWeight: 'bold', 
+              color: 'text.secondary', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.05em' 
+            }}
+          >
+            英雄定位
+          </Typography>
+        </Stack>
+
+        <Stack spacing={1.25}>
           {types.map(type => {
             const Icon = typeIconMap[type.name] || LayoutGrid;
             const isSelected = selectedType === type.name;
             
             return (
-              <button
+              <ButtonBase
                 key={type.id}
                 onClick={() => onTypeChange(type.name)}
-                className={`
-                  group relative px-4 py-3 rounded-xl text-[14px] font-semibold transition-all duration-300 border-none cursor-pointer
-                  flex items-center justify-between overflow-hidden
-                  ${isSelected 
-                    ? 'bg-linear-to-r from-primary to-[#FF7A00] text-white shadow-[0_4px_12px_rgba(255,159,0,0.25)]' 
-                    : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white'}
-                `}
+                sx={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  px: 2,
+                  py: 1.5,
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  ...(isSelected ? {
+                    background: 'linear-gradient(to right, #FF9F00, #FF7A00)',
+                    color: '#fff',
+                    boxShadow: '0 4px 12px rgba(255,159,0,0.25)',
+                  } : {
+                    bgcolor: 'rgba(255,255,255,0.05)',
+                    color: 'text.secondary',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                      color: '#fff',
+                    }
+                  })
+                }}
               >
-                {/* 选中时的背景发光效果 */}
                 {isSelected && (
-                  <div className="absolute inset-0 bg-white/10 animate-pulse" />
+                  <Box 
+                    component="span"
+                    className="animate-pulse"
+                    sx={{ 
+                      position: 'absolute', 
+                      inset: 0, 
+                      bgcolor: 'rgba(255,255,255,0.1)' 
+                    }} 
+                  />
                 )}
                 
-                <div className="flex items-center gap-3 relative z-10">
-                  <div className={`
-                    w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-300
-                    ${isSelected ? 'bg-white/20' : 'bg-bg-page/50 group-hover:bg-primary/10 group-hover:text-primary'}
-                  `}>
+                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ position: 'relative', zIndex: 1 }}>
+                  <Box sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease',
+                    bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                    '.group:hover &': {
+                      bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(255,159,0,0.1)',
+                      color: isSelected ? '#fff' : 'primary.main',
+                    }
+                  }}>
                     <Icon size={16} />
-                  </div>
-                  <span>{type.name}</span>
-                </div>
+                  </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {type.name}
+                  </Typography>
+                </Stack>
 
-                <div className={`
-                  text-[11px] px-2 py-0.5 rounded-full min-w-7 text-center font-bold relative z-10
-                  ${isSelected 
-                    ? 'bg-black/20 text-white' 
-                    : 'bg-bg-page/50 text-text-secondary group-hover:text-primary group-hover:bg-primary/10'}
-                `}>
+                <Box sx={{
+                  fontSize: '11px',
+                  px: 1,
+                  py: 0.25,
+                  borderRadius: '10px',
+                  minWidth: 28,
+                  textAlign: 'center',
+                  fontWeight: 'bold',
+                  position: 'relative',
+                  zIndex: 1,
+                  ...(isSelected ? {
+                    bgcolor: 'rgba(0,0,0,0.2)',
+                    color: '#fff',
+                  } : {
+                    bgcolor: 'rgba(0,0,0,0.2)',
+                    color: 'text.secondary',
+                  })
+                }}>
                   {typeCounts[type.name] || 0}
-                </div>
-              </button>
+                </Box>
+              </ButtonBase>
             );
           })}
-        </div>
-      </div>
+        </Stack>
+      </Box>
 
-      <div className="pt-2">
-        <div className="flex items-center gap-2 mb-4 px-1">
-          <div className="w-1 h-4 bg-success rounded-full shadow-[0_0_8px_rgba(46,204,113,0.6)]" />
-          <h3 className="text-[13px] font-bold text-text-secondary uppercase tracking-wider">新手筛选</h3>
-        </div>
+      <Box sx={{ pt: 1 }}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2, px: 0.5 }}>
+          <Box sx={{ 
+            width: 4, 
+            height: 16, 
+            bgcolor: 'success.main', 
+            borderRadius: '2px',
+            boxShadow: '0 0 8px rgba(46,204,113,0.6)'
+          }} />
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              fontWeight: 'bold', 
+              color: 'text.secondary', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.05em' 
+            }}
+          >
+            新手筛选
+          </Typography>
+        </Stack>
         
-        <button
+        <ButtonBase
           onClick={() => onNoviceToggle(!isNoviceOnly)}
-          className={`
-            w-full group px-4 py-4 rounded-2xl transition-all duration-300 border-none cursor-pointer
-            flex flex-col gap-2 text-left relative overflow-hidden
-            ${isNoviceOnly 
-              ? 'bg-linear-to-br from-success/20 to-[#27AE60]/5 border-2 border-success/30 shadow-[0_8px_20px_rgba(46,204,113,0.1)]' 
-              : 'bg-white/5 border-2 border-transparent hover:bg-white/10'}
-          `}
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            p: 2,
+            borderRadius: '16px',
+            transition: 'all 0.3s ease',
+            textAlign: 'left',
+            position: 'relative',
+            overflow: 'hidden',
+            border: '2px solid',
+            ...(isNoviceOnly ? {
+              background: 'linear-gradient(to bottom right, rgba(46,204,113,0.2), rgba(39,174,96,0.05))',
+              borderColor: 'rgba(46,204,113,0.3)',
+              boxShadow: '0 8px 20px rgba(46,204,113,0.1)',
+            } : {
+              bgcolor: 'rgba(255,255,255,0.05)',
+              borderColor: 'transparent',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.1)',
+              }
+            })
+          }}
         >
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2.5">
-              <div className={`
-                w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300
-                ${isNoviceOnly ? 'bg-success text-white shadow-lg shadow-success/30' : 'bg-bg-page/50 text-text-secondary group-hover:text-success group-hover:bg-success/10'}
-              `}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Box sx={{
+                width: 36,
+                height: 36,
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s ease',
+                ...(isNoviceOnly ? {
+                  bgcolor: 'success.main',
+                  color: '#fff',
+                  boxShadow: '0 4px 12px rgba(46,204,113,0.3)',
+                } : {
+                  bgcolor: 'rgba(0,0,0,0.2)',
+                  color: 'text.secondary',
+                })
+              }}>
                 <Sparkles size={18} />
-              </div>
-              <span className={`font-bold transition-colors ${isNoviceOnly ? 'text-success' : 'text-text-primary group-hover:text-success'}`}>
+              </Box>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  color: isNoviceOnly ? 'success.main' : 'text.primary'
+                }}
+              >
                 新手推荐
-              </span>
-            </div>
+              </Typography>
+            </Stack>
             
-            {/* 模拟 Switch 效果 */}
-            <div className={`
-              w-10 h-5 rounded-full relative transition-all duration-300
-              ${isNoviceOnly ? 'bg-success' : 'bg-bg-page/50'}
-            `}>
-              <div className={`
-                absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm
-                ${isNoviceOnly ? 'left-6' : 'left-1'}
-              `} />
-            </div>
-          </div>
+            <Switch 
+              checked={isNoviceOnly} 
+              size="small"
+              color="success"
+              sx={{
+                '& .MuiSwitch-track': {
+                  bgcolor: isNoviceOnly ? 'success.main' : 'rgba(0,0,0,0.2)',
+                  opacity: 1,
+                }
+              }}
+            />
+          </Stack>
           
-          <p className={`text-[11px] leading-relaxed transition-colors ${isNoviceOnly ? 'text-success/80' : 'text-text-secondary group-hover:text-text-secondary/80'}`}>
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: isNoviceOnly ? 'rgba(46,204,113,0.8)' : 'text.secondary',
+              lineHeight: 1.5
+            }}
+          >
             筛选上手难度 ⭐-⭐⭐ 的英雄，助你快速上分
-          </p>
-        </button>
-      </div>
-    </div>
+          </Typography>
+        </ButtonBase>
+      </Box>
+    </Stack>
   );
 };

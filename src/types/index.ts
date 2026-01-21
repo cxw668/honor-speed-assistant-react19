@@ -1,7 +1,8 @@
 export interface RouteItem {
   path: string
   element: React.ReactNode;
-  label: string
+  label: string;
+  icon?: React.ReactNode;
 }
 /**
  * 王者荣耀英雄职业类型

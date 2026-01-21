@@ -1,4 +1,15 @@
 import React, { useState, useMemo } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  Stack,
+  IconButton,
+  Button,
+  Grid,
+  useTheme,
+  alpha,
+} from '@mui/material';
 import { HeroSelect } from './HeroSelect';
 import { Swords, Users, ShieldAlert, Zap, TrendingUp, Info, Trash2, X } from 'lucide-react';
 import heroDetailsData from '../../mock/hero/hero_details.json';
@@ -83,6 +94,8 @@ export const HeroRelationshipAnalysis: React.FC = () => {
 
     // 辅助函数：获取英雄的所有详情（处理多职业，如元流之子）
     const getHeroDetails = (heroName: string) => {
+      // 这里的 heroName 是 useHeroData 处理后的基础名称（如 "元流之子"）
+      // 而 heroDetailsData 中的 name 可能是 "元流之子(辅助)"
       return (heroDetailsData as HeroDetail[]).filter(d => 
         d.name === heroName || d.name.startsWith(`${heroName}(`)
       );
@@ -96,8 +109,15 @@ export const HeroRelationshipAnalysis: React.FC = () => {
       details.forEach(detail => {
         if (detail.relationships?.["最佳搭档"]) {
           detail.relationships["最佳搭档"].heroes.forEach((p, idx) => {
+            // 匹配逻辑：p.cname 可能需要模糊匹配
             if (myHeroes.some(h => h?.heroName === p.cname || p.cname.startsWith(`${h?.heroName}(`))) {
-              if (!partnerships.some(item => (item.hero === hero.heroName && item.partner === p.cname) || (item.hero === p.cname && item.partner === hero.heroName))) {
+              // 避免重复添加 (A-B 和 B-A)
+              const alreadyExists = partnerships.some(item => 
+                (item.hero === hero.heroName && item.partner === p.cname) || 
+                (item.hero === p.cname && item.partner === hero.heroName)
+              );
+              
+              if (!alreadyExists) {
                 partnerships.push({
                   hero: hero.heroName,
                   partner: p.cname,
@@ -141,7 +161,8 @@ export const HeroRelationshipAnalysis: React.FC = () => {
         if (detail.relationships?.["被压制英雄"]) {
           detail.relationships["被压制英雄"].heroes.forEach((e, idx) => {
             if (enemyHeroes.some(h => h?.heroName === e.cname || e.cname.startsWith(`${h?.heroName}(`))) {
-              if (!enemySuppression.some(s => s.enemy === e.cname && s.hero === hero.heroName)) {
+              const alreadyExists = enemySuppression.some(s => s.enemy === e.cname && s.hero === hero.heroName);
+              if (!alreadyExists) {
                 enemySuppression.push({
                   enemy: e.cname,
                   hero: hero.heroName,
@@ -195,95 +216,275 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     return { partnerships, mySuppression, enemySuppression };
   }, [myTeam, enemyTeam]);
 
+  const theme = useTheme();
+
   const TeamSlot = ({ team, index, id }: { team: 'my' | 'enemy', index: number, id: number | null }) => {
     const hero = id ? allHeroes.find(h => h.id === id) : null;
+    const isError = team === 'enemy';
+    const color = isError ? theme.palette.error.main : theme.palette.primary.main;
+
     return (
-      <div 
+      <Box
         onClick={() => setSelectingSlot({ team, index })}
-        className={`relative group w-full aspect-square rounded-2xl border-2 transition-all duration-300 overflow-hidden cursor-pointer ${
-          team === 'my' 
-            ? 'border-primary/20 bg-primary/5 hover:border-primary/50' 
-            : 'border-danger/20 bg-danger/5 hover:border-danger/50'
-        } ${selectingSlot?.team === team && selectingSlot?.index === index ? 'ring-2 ring-offset-2 ring-primary scale-105' : ''}`}
+        sx={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '1/1',
+          borderRadius: 4,
+          border: '2px solid',
+          bgcolor: alpha(color, 0.05),
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          cursor: 'pointer',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          ...(selectingSlot?.team === team && selectingSlot?.index === index ? {
+            borderColor: color,
+            boxShadow: `0 0 15px ${alpha(color, 0.3)}`,
+            transform: 'scale(1.05)',
+            zIndex: 1
+          } : {
+            '&:hover': {
+              borderColor: alpha(color, 0.5),
+              transform: 'translateY(-2px)'
+            }
+          })
+        }}
       >
         {hero ? (
-          <img src={hero.heroSrc} alt={hero.heroName} className="w-full h-full object-cover animate-in fade-in zoom-in-95" />
+          <Box
+            component="img"
+            src={hero.heroSrc}
+            alt={hero.heroName}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              animation: 'fadeIn 0.3s ease-out'
+            }}
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <TrendingUp size={24} className={team === 'my' ? 'text-primary/30' : 'text-danger/30'} />
-          </div>
+          <TrendingUp size={24} style={{ color: alpha(color, 0.3) }} />
         )}
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <Zap size={16} className="text-white" />
-        </div>
+        
+        <Box
+          className="hover-overlay"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            bgcolor: alpha(theme.palette.common.black, 0.2),
+            opacity: 0,
+            transition: 'opacity 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            '&:hover': { opacity: 1 }
+          }}
+        >
+          <Zap size={16} color="white" />
+        </Box>
+
         {hero && (
-          <div className="absolute bottom-0 left-0 right-0 bg-black/60 py-0.5 px-1 text-[10px] text-white text-center font-bold">
-            {hero.heroName}
-          </div>
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              bgcolor: alpha(theme.palette.common.black, 0.6),
+              backdropFilter: 'blur(4px)',
+              py: 0.5,
+              px: 1,
+              textAlign: 'center'
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'common.white',
+                fontWeight: 900,
+                fontSize: '10px',
+                display: 'block',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {hero.heroName}
+            </Typography>
+          </Box>
         )}
-      </div>
+      </Box>
     );
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 bg-bg-card rounded-[40px] shadow-2xl border-2 border-primary/10 h-full relative overflow-hidden group">
-      <div className="flex items-center justify-between relative z-10">
-        <h3 className="text-xl font-black text-text-primary flex items-center gap-2">
-          <Swords size={20} className="text-primary" />
-          阵容克制关系分析
-        </h3>
-        <button 
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 3, md: 4 },
+        borderRadius: 10,
+        border: '1px solid',
+        borderColor: alpha(theme.palette.divider, 0.1),
+        bgcolor: alpha(theme.palette.background.paper, 0.6),
+        backdropFilter: 'blur(20px)',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 3,
+        position: 'relative',
+        overflow: 'hidden',
+        '&:hover .decorative-circle': {
+          transform: 'scale(1.1)',
+          opacity: 0.1
+        }
+      }}
+    >
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ position: 'relative', zIndex: 1 }}>
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 3,
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'primary.main'
+            }}
+          >
+            <Swords size={20} />
+          </Box>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', tracking: '-0.02em' }}>
+              阵容克制关系分析
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+              基于大数据分析英雄间的羁绊与克制
+            </Typography>
+          </Box>
+        </Stack>
+
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<Trash2 size={14} />}
           onClick={clearTeams}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-text-secondary hover:text-danger hover:bg-danger/5 transition-all border border-transparent hover:border-danger/20"
+          sx={{
+            borderRadius: 3,
+            borderColor: alpha(theme.palette.divider, 0.2),
+            color: 'text.secondary',
+            fontWeight: 800,
+            px: 2,
+            '&:hover': {
+              borderColor: 'error.main',
+              color: 'error.main',
+              bgcolor: alpha(theme.palette.error.main, 0.05)
+            }
+          }}
         >
-          <Trash2 size={14} />
           重置阵容
-        </button>
-      </div>
+        </Button>
+      </Stack>
 
       {/* 5V5 阵容选择区 */}
-      <div className="grid grid-cols-2 gap-8 relative z-10">
+      <Grid container spacing={4} sx={{ position: 'relative', zIndex: 1 }}>
         {/* 己方阵容 */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-2">
-            <Users size={16} className="text-primary" />
-            <span className="text-sm font-black text-primary uppercase tracking-wider">己方阵容</span>
-          </div>
-          <div className="grid grid-cols-5 gap-2">
-            {myTeam.map((id, idx) => <TeamSlot key={`my-${idx}`} team="my" index={idx} id={id} />)}
-          </div>
-        </div>
+        <Grid size={{ xs: 6 }}>
+          <Stack spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+              <Users size={16} color={theme.palette.primary.main} />
+              <Typography
+                variant="overline"
+                sx={{
+                  fontWeight: 900,
+                  color: 'primary.main',
+                  letterSpacing: '0.1em'
+                }}
+              >
+                己方阵容
+              </Typography>
+            </Stack>
+            <Grid container spacing={1.5}>
+              {myTeam.map((id, idx) => (
+                <Grid size={{ xs: 2.4 }} key={`my-${idx}`}>
+                  <TeamSlot team="my" index={idx} id={id} />
+                </Grid>
+              ))}
+            </Grid>
+          </Stack>
+        </Grid>
 
         {/* 敌方阵容 */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-2 justify-end">
-            <span className="text-sm font-black text-danger uppercase tracking-wider">敌方阵容</span>
-            <Zap size={16} className="text-danger" />
-          </div>
-          <div className="grid grid-cols-5 gap-2">
-            {enemyTeam.map((id, idx) => <TeamSlot key={`enemy-${idx}`} team="enemy" index={idx} id={id} />)}
-          </div>
-        </div>
-      </div>
+        <Grid size={{ xs: 6 }}>
+          <Stack spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, justifyContent: 'flex-end' }}>
+              <Typography
+                variant="overline"
+                sx={{
+                  fontWeight: 900,
+                  color: 'error.main',
+                  letterSpacing: '0.1em'
+                }}
+              >
+                敌方阵容
+              </Typography>
+              <Zap size={16} color={theme.palette.error.main} />
+            </Stack>
+            <Grid container spacing={1.5}>
+              {enemyTeam.map((id, idx) => (
+                <Grid size={{ xs: 2.4 }} key={`enemy-${idx}`}>
+                  <TeamSlot team="enemy" index={idx} id={id} />
+                </Grid>
+              ))}
+            </Grid>
+          </Stack>
+        </Grid>
+      </Grid>
 
       {/* 英雄选择浮层 */}
       {selectingSlot && (
-        <div className="absolute inset-0 z-50 bg-bg-card/95 backdrop-blur-md animate-in fade-in duration-300 p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-6 rounded-full ${selectingSlot.team === 'my' ? 'bg-primary' : 'bg-danger'}`} />
-              <h4 className="text-lg font-black text-text-primary">
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 50,
+            bgcolor: alpha(theme.palette.background.paper, 0.9),
+            backdropFilter: 'blur(20px)',
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            animation: 'fadeIn 0.3s ease-out'
+          }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Box
+                sx={{
+                  width: 6,
+                  height: 24,
+                  borderRadius: 1,
+                  bgcolor: selectingSlot.team === 'my' ? 'primary.main' : 'error.main'
+                }}
+              />
+              <Typography variant="h6" sx={{ fontWeight: 900 }}>
                 选择{selectingSlot.team === 'my' ? '己方' : '敌方'}第 {selectingSlot.index + 1} 位英雄
-              </h4>
-            </div>
-            <button 
+              </Typography>
+            </Stack>
+            <IconButton
               onClick={() => setSelectingSlot(null)}
-              className="p-2 hover:bg-primary/10 rounded-full transition-colors text-text-secondary hover:text-primary"
+              sx={{
+                bgcolor: alpha(theme.palette.action.hover, 0.05),
+                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }
+              }}
             >
-              <X size={24} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-hidden">
+              <X size={20} />
+            </IconButton>
+          </Stack>
+          
+          <Box sx={{ flex: 1, overflow: 'hidden' }}>
             <HeroSelect 
               value={selectingSlot.team === 'my' ? (myTeam[selectingSlot.index] || 0) : (enemyTeam[selectingSlot.index] || 0)} 
               onChange={handleSelectHero} 
@@ -292,74 +493,199 @@ export const HeroRelationshipAnalysis: React.FC = () => {
               onRemove={handleRemoveHero}
               maxSelect={5}
             />
-          </div>
-          <div className="mt-4 text-center text-xs text-text-secondary italic">
+          </Box>
+          
+          <Typography
+            variant="caption"
+            sx={{
+              mt: 2,
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontStyle: 'italic',
+              fontWeight: 500
+            }}
+          >
             提示：在上方搜索框输入英雄名或直接从列表中选择英雄
-          </div>
-        </div>
+          </Typography>
+        </Box>
       )}
 
       {/* 分析结果区 */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar relative z-10 min-h-[300px]">
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          pr: 1,
+          mt: 1,
+          position: 'relative',
+          zIndex: 1,
+          minHeight: 300,
+          '&::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            bgcolor: alpha(theme.palette.divider, 0.1),
+            borderRadius: '10px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            bgcolor: alpha(theme.palette.primary.main, 0.2),
+          }
+        }}
+      >
         {analysisResults.partnerships.length === 0 && 
          analysisResults.mySuppression.length === 0 && 
          analysisResults.enemySuppression.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-text-secondary opacity-50 py-12">
-            <Info size={48} className="mb-4" />
-            <p className="text-sm font-bold">选择英雄开始分析克制关系</p>
-          </div>
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{ height: '100%', py: 8, color: 'text.secondary', opacity: 0.5 }}
+          >
+            <Info size={48} />
+            <Typography variant="body2" sx={{ mt: 2, fontWeight: 800 }}>
+              选择英雄开始分析克制关系
+            </Typography>
+          </Stack>
         ) : (
-          <>
+          <Stack spacing={3}>
             {/* 最佳搭档 */}
             {analysisResults.partnerships.length > 0 && (
-              <div className="space-y-2 animate-in slide-in-from-bottom-2 duration-300">
-                <div className="flex items-center gap-2 text-success font-black text-xs uppercase tracking-widest px-1">
-                  <TrendingUp size={14} /> 最佳搭档
-                </div>
+              <Stack spacing={1.5}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+                  <TrendingUp size={14} color={theme.palette.success.main} />
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      fontWeight: 900,
+                      color: 'success.main',
+                      letterSpacing: '0.2em'
+                    }}
+                  >
+                    最佳搭档
+                  </Typography>
+                </Stack>
                 {analysisResults.partnerships.map((p, i) => (
-                  <div key={i} className="bg-success/5 border border-success/10 p-3 rounded-2xl text-xs">
-                    <div className="font-bold text-success mb-1">{p.hero} & {p.partner}</div>
-                    <p className="text-text-secondary leading-relaxed">{p.desc}</p>
-                  </div>
+                  <Paper
+                    key={i}
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      borderRadius: 4,
+                      bgcolor: alpha(theme.palette.success.main, 0.05),
+                      border: '1px solid',
+                      borderColor: alpha(theme.palette.success.main, 0.1),
+                      animation: 'fadeInUp 0.3s ease-out'
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'success.main', mb: 0.5 }}>
+                      {p.hero} & {p.partner}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                      {p.desc}
+                    </Typography>
+                  </Paper>
                 ))}
-              </div>
+              </Stack>
             )}
 
             {/* 我方压制 */}
             {analysisResults.mySuppression.length > 0 && (
-              <div className="space-y-2 animate-in slide-in-from-bottom-2 duration-300 delay-75">
-                <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest px-1">
-                  <Zap size={14} /> 我方压制
-                </div>
+              <Stack spacing={1.5}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+                  <Zap size={14} color={theme.palette.primary.main} />
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      fontWeight: 900,
+                      color: 'primary.main',
+                      letterSpacing: '0.2em'
+                    }}
+                  >
+                    我方压制
+                  </Typography>
+                </Stack>
                 {analysisResults.mySuppression.map((s, i) => (
-                  <div key={i} className="bg-primary/5 border border-primary/10 p-3 rounded-2xl text-xs">
-                    <div className="font-bold text-primary mb-1">{s.hero} <span className="mx-1 text-text-secondary">压制</span> {s.enemy}</div>
-                    <p className="text-text-secondary leading-relaxed">{s.desc}</p>
-                  </div>
+                  <Paper
+                    key={i}
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      borderRadius: 4,
+                      bgcolor: alpha(theme.palette.primary.main, 0.05),
+                      border: '1px solid',
+                      borderColor: alpha(theme.palette.primary.main, 0.1),
+                      animation: 'fadeInUp 0.3s ease-out'
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'primary.main', mb: 0.5 }}>
+                      {s.hero} <Box component="span" sx={{ mx: 1, color: 'text.secondary', fontWeight: 500 }}>压制</Box> {s.enemy}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                      {s.desc}
+                    </Typography>
+                  </Paper>
                 ))}
-              </div>
+              </Stack>
             )}
 
             {/* 敌方压制 */}
             {analysisResults.enemySuppression.length > 0 && (
-              <div className="space-y-2 animate-in slide-in-from-bottom-2 duration-300 delay-150">
-                <div className="flex items-center gap-2 text-danger font-black text-xs uppercase tracking-widest px-1">
-                  <ShieldAlert size={14} /> 敌方压制
-                </div>
+              <Stack spacing={1.5}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+                  <ShieldAlert size={14} color={theme.palette.error.main} />
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      fontWeight: 900,
+                      color: 'error.main',
+                      letterSpacing: '0.2em'
+                    }}
+                  >
+                    敌方压制
+                  </Typography>
+                </Stack>
                 {analysisResults.enemySuppression.map((s, i) => (
-                  <div key={i} className="bg-danger/5 border border-danger/10 p-3 rounded-2xl text-xs">
-                    <div className="font-bold text-danger mb-1">{s.enemy} <span className="mx-1 text-text-secondary">压制</span> {s.hero}</div>
-                    <p className="text-text-secondary leading-relaxed">{s.desc}</p>
-                  </div>
+                  <Paper
+                    key={i}
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      borderRadius: 4,
+                      bgcolor: alpha(theme.palette.error.main, 0.05),
+                      border: '1px solid',
+                      borderColor: alpha(theme.palette.error.main, 0.1),
+                      animation: 'fadeInUp 0.3s ease-out'
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'error.main', mb: 0.5 }}>
+                      {s.enemy} <Box component="span" sx={{ mx: 1, color: 'text.secondary', fontWeight: 500 }}>压制</Box> {s.hero}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                      {s.desc}
+                    </Typography>
+                  </Paper>
                 ))}
-              </div>
+              </Stack>
             )}
-          </>
+          </Stack>
         )}
-      </div>
+      </Box>
 
       {/* 装饰 */}
-      <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
-    </div>
+      <Box
+        className="decorative-circle"
+        sx={{
+          position: 'absolute',
+          bottom: -48,
+          right: -48,
+          width: 192,
+          height: 192,
+          bgcolor: alpha(theme.palette.primary.main, 0.05),
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          transition: 'all 0.5s ease-out',
+          pointerEvents: 'none'
+        }}
+      />
+    </Paper>
   );
 };
