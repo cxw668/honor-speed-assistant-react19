@@ -21,6 +21,7 @@ export const getAppTheme = (mode: PaletteMode) => createTheme({
         default: '#0F172A',
         paper: '#1E293B',
       },
+      // 针对首页 查看开源 按钮边框
       common: {
         white: '#ffffff',
       },
