@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -9,9 +9,10 @@ import {
   Grid,
   useTheme,
   alpha,
+  Fade,
 } from '@mui/material';
 import { HeroSelect } from './HeroSelect';
-import { Swords, Users, ShieldAlert, Zap, TrendingUp, Info, Trash2, X } from 'lucide-react';
+import { Swords, Users, ShieldAlert, Zap, TrendingUp, Info, Trash2, X, ChevronDown } from 'lucide-react';
 import heroDetailsData from '../../mock/hero/hero_details.json';
 import { useHeroData } from '../../hooks/useHeroData';
 
@@ -29,24 +30,146 @@ interface HeroDetail {
   };
 }
 
+/**
+ * 英雄槽位组件 - 性能优化版
+ * 使用 React.memo 并在外部定义，避免父组件渲染时导致的不必要重绘和闪烁
+ */
+const TeamSlot = React.memo(({ 
+  team, 
+  index, 
+  isSelected,
+  hero,
+  onClick 
+}: { 
+  team: 'my' | 'enemy', 
+  index: number, 
+  isSelected: boolean,
+  hero: any,
+  onClick: (team: 'my' | 'enemy', index: number) => void
+}) => {
+  const theme = useTheme();
+  const isError = team === 'enemy';
+  const color = isError ? theme.palette.error.main : theme.palette.primary.main;
+
+  return (
+    <Box
+      onClick={() => onClick(team, index)}
+      sx={{
+        position: 'relative',
+        width: '100%',
+        aspectRatio: '1/1',
+        borderRadius: 4,
+        border: '2px solid',
+        bgcolor: alpha(color, 0.05),
+        // 移除了 transition，确保选中状态切换是瞬时的，无闪烁
+        cursor: 'pointer',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...(isSelected ? {
+          borderColor: color,
+          boxShadow: `0 0 15px ${alpha(color, 0.3)}`,
+          transform: 'scale(1.05)',
+          zIndex: 1
+        } : {
+          '&:hover': {
+            borderColor: alpha(color, 0.5),
+            transform: 'translateY(-2px)'
+          }
+        })
+      }}
+    >
+      {hero ? (
+        <Box
+          component="img"
+          src={hero.heroSrc}
+          alt={hero.heroName}
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      ) : (
+        <TrendingUp size={24} style={{ color: alpha(color, 0.3) }} />
+      )}
+
+      <Box
+        className="hover-overlay"
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          bgcolor: alpha(theme.palette.common.black, 0.2),
+          opacity: 0,
+          transition: 'opacity 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          '&:hover': { opacity: 1 }
+        }}
+      >
+        <Zap size={16} color="white" />
+      </Box>
+
+      {hero && (
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            bgcolor: alpha(theme.palette.common.black, 0.6),
+            backdropFilter: 'blur(4px)',
+            py: 0.5,
+            px: 1,
+            textAlign: 'center'
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'common.white',
+              fontWeight: 900,
+              fontSize: '10px',
+              display: 'block',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {hero.heroName}
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
+});
+
 export const HeroRelationshipAnalysis: React.FC = () => {
   const { heroList: allHeroes } = useHeroData();
   const [myTeam, setMyTeam] = useState<(number | null)[]>(Array(5).fill(null));
   const [enemyTeam, setEnemyTeam] = useState<(number | null)[]>(Array(5).fill(null));
   const [selectingSlot, setSelectingSlot] = useState<{ team: 'my' | 'enemy', index: number } | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+
+  const handleSlotClick = React.useCallback((team: 'my' | 'enemy', index: number) => {
+    setSelectingSlot({ team, index });
+  }, []);
 
   const handleSelectHero = (heroId: number) => {
     if (!selectingSlot) return;
-    
+
     const { team, index } = selectingSlot;
     const currentTeam = team === 'my' ? [...myTeam] : [...enemyTeam];
-    
+
     // 如果当前槽位已有英雄且点击了同一个英雄，不做处理（实际上 HeroSelect 已经处理了禁用）
     if (currentTeam[index] === heroId) return;
 
     // 更新当前点击的槽位
     currentTeam[index] = heroId;
-    
+
     if (team === 'my') {
       setMyTeam(currentTeam);
     } else {
@@ -54,18 +177,28 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     }
 
     // 智能跳转：寻找下一个空槽位
-    const nextEmptyIndex = currentTeam.findIndex((id, idx) => idx > index && id === null);
+    const nextEmptyIndex = currentTeam.findIndex((id, idx) => id === null && idx > index);
     if (nextEmptyIndex !== -1) {
       setSelectingSlot({ team, index: nextEmptyIndex });
+      return;
     }
-    // 如果没有下一个空位了，保持当前状态，让用户手动关闭或继续修改
+    
+    // 如果没有向后的空位了，检查前面是否有空槽位
+    const prevEmptyIndex = currentTeam.findIndex((id, idx) => id === null && idx < index);
+    if (prevEmptyIndex !== -1) {
+      setSelectingSlot({ team, index: prevEmptyIndex });
+      return;
+    }
+
+    // 如果该队伍所有槽位都已选满，则自动关闭选择面板
+    setSelectingSlot(null);
   };
 
   const handleRemoveHero = (heroId: number) => {
     if (!selectingSlot) return;
     const { team } = selectingSlot;
     const currentTeam = team === 'my' ? [...myTeam] : [...enemyTeam];
-    
+
     const indexToRemove = currentTeam.indexOf(heroId);
     if (indexToRemove !== -1) {
       currentTeam[indexToRemove] = null;
@@ -95,9 +228,8 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     // 辅助函数：获取英雄的所有详情（处理多职业，如元流之子）
     const getHeroDetails = (heroName: string) => {
       // 这里的 heroName 是 useHeroData 处理后的基础名称（如 "元流之子"）
-      // 而 heroDetailsData 中的 name 可能是 "元流之子(辅助)"
-      return (heroDetailsData as HeroDetail[]).filter(d => 
-        d.name === heroName || d.name.startsWith(`${heroName}(`)
+      return (heroDetailsData as HeroDetail[]).filter(d =>
+        d.name === heroName
       );
     };
 
@@ -105,18 +237,18 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     myHeroes.forEach(hero => {
       if (!hero) return;
       const details = getHeroDetails(hero.heroName);
-      
+
       details.forEach(detail => {
         if (detail.relationships?.["最佳搭档"]) {
           detail.relationships["最佳搭档"].heroes.forEach((p, idx) => {
             // 匹配逻辑：p.cname 可能需要模糊匹配
             if (myHeroes.some(h => h?.heroName === p.cname || p.cname.startsWith(`${h?.heroName}(`))) {
               // 避免重复添加 (A-B 和 B-A)
-              const alreadyExists = partnerships.some(item => 
-                (item.hero === hero.heroName && item.partner === p.cname) || 
+              const alreadyExists = partnerships.some(item =>
+                (item.hero === hero.heroName && item.partner === p.cname) ||
                 (item.hero === p.cname && item.partner === hero.heroName)
               );
-              
+
               if (!alreadyExists) {
                 partnerships.push({
                   hero: hero.heroName,
@@ -134,7 +266,7 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     myHeroes.forEach(hero => {
       if (!hero) return;
       const details = getHeroDetails(hero.heroName);
-      
+
       details.forEach(detail => {
         // 己方压制敌方
         if (detail.relationships?.["压制英雄"]) {
@@ -155,7 +287,7 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     myHeroes.forEach(hero => {
       if (!hero) return;
       const details = getHeroDetails(hero.heroName);
-      
+
       details.forEach(detail => {
         // 己方被敌方压制
         if (detail.relationships?.["被压制英雄"]) {
@@ -179,7 +311,7 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     enemyHeroes.forEach(enemy => {
       if (!enemy) return;
       const details = getHeroDetails(enemy.heroName);
-      
+
       details.forEach(detail => {
         // 敌方压制己方
         if (detail.relationships?.["压制英雄"]) {
@@ -216,108 +348,38 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     return { partnerships, mySuppression, enemySuppression };
   }, [myTeam, enemyTeam]);
 
-  const theme = useTheme();
-
-  const TeamSlot = ({ team, index, id }: { team: 'my' | 'enemy', index: number, id: number | null }) => {
-    const hero = id ? allHeroes.find(h => h.id === id) : null;
-    const isError = team === 'enemy';
-    const color = isError ? theme.palette.error.main : theme.palette.primary.main;
-
-    return (
-      <Box
-        onClick={() => setSelectingSlot({ team, index })}
-        sx={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '1/1',
-          borderRadius: 4,
-          border: '2px solid',
-          bgcolor: alpha(color, 0.05),
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          cursor: 'pointer',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          ...(selectingSlot?.team === team && selectingSlot?.index === index ? {
-            borderColor: color,
-            boxShadow: `0 0 15px ${alpha(color, 0.3)}`,
-            transform: 'scale(1.05)',
-            zIndex: 1
-          } : {
-            '&:hover': {
-              borderColor: alpha(color, 0.5),
-              transform: 'translateY(-2px)'
-            }
-          })
-        }}
-      >
-        {hero ? (
-          <Box
-            component="img"
-            src={hero.heroSrc}
-            alt={hero.heroName}
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              animation: 'fadeIn 0.3s ease-out'
-            }}
-          />
-        ) : (
-          <TrendingUp size={24} style={{ color: alpha(color, 0.3) }} />
-        )}
+  // 监听滚动区域高度变化，判断是否需要显示滚动提示
+  useEffect(() => {
+    const checkScroll = () => {
+      if (scrollContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+        // 只有当所有英雄（10个槽位）都选满时，才允许显示滚动提示
+        const isAllSelected = [...myTeam, ...enemyTeam].every(id => id !== null);
         
-        <Box
-          className="hover-overlay"
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            bgcolor: alpha(theme.palette.common.black, 0.2),
-            opacity: 0,
-            transition: 'opacity 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            '&:hover': { opacity: 1 }
-          }}
-        >
-          <Zap size={16} color="white" />
-        </Box>
+        // 如果内容高度大于容器高度，且还没滚到底部，则显示提示
+        const canScroll = scrollHeight > clientHeight + 10;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 20;
+        
+        setShowScrollHint(isAllSelected && canScroll && !isAtBottom);
+      }
+    };
 
-        {hero && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              bgcolor: alpha(theme.palette.common.black, 0.6),
-              backdropFilter: 'blur(4px)',
-              py: 0.5,
-              px: 1,
-              textAlign: 'center'
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{
-                color: 'common.white',
-                fontWeight: 900,
-                fontSize: '10px',
-                display: 'block',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-            >
-              {hero.heroName}
-            </Typography>
-          </Box>
-        )}
-      </Box>
-    );
-  };
+    const container = scrollContainerRef.current;
+    if (container) {
+      checkScroll();
+      container.addEventListener('scroll', checkScroll);
+      // 使用 ResizeObserver 监听内容变化（比如英雄增加时）
+      const resizeObserver = new ResizeObserver(checkScroll);
+      resizeObserver.observe(container);
+
+      return () => {
+        container.removeEventListener('scroll', checkScroll);
+        resizeObserver.disconnect();
+      };
+    }
+  }, [analysisResults, selectingSlot]); // 当分析结果或弹窗状态改变时重新检查
+
+  const theme = useTheme();
 
   return (
     <Paper
@@ -329,7 +391,7 @@ export const HeroRelationshipAnalysis: React.FC = () => {
         borderColor: alpha(theme.palette.divider, 0.1),
         bgcolor: alpha(theme.palette.background.paper, 0.6),
         backdropFilter: 'blur(20px)',
-        height: '100%',
+        height: 'calc(100vh - 120px)', // 适配视口高度，减去顶部空间
         display: 'flex',
         flexDirection: 'column',
         gap: 3,
@@ -410,7 +472,13 @@ export const HeroRelationshipAnalysis: React.FC = () => {
             <Grid container spacing={1.5}>
               {myTeam.map((id, idx) => (
                 <Grid size={{ xs: 2.4 }} key={`my-${idx}`}>
-                  <TeamSlot team="my" index={idx} id={id} />
+                  <TeamSlot 
+                    team="my" 
+                    index={idx} 
+                    isSelected={selectingSlot?.team === 'my' && selectingSlot?.index === idx}
+                    hero={id ? allHeroes.find(h => h.id === id) : null}
+                    onClick={handleSlotClick}
+                  />
                 </Grid>
               ))}
             </Grid>
@@ -436,7 +504,13 @@ export const HeroRelationshipAnalysis: React.FC = () => {
             <Grid container spacing={1.5}>
               {enemyTeam.map((id, idx) => (
                 <Grid size={{ xs: 2.4 }} key={`enemy-${idx}`}>
-                  <TeamSlot team="enemy" index={idx} id={id} />
+                  <TeamSlot 
+                    team="enemy" 
+                    index={idx} 
+                    isSelected={selectingSlot?.team === 'enemy' && selectingSlot?.index === idx}
+                    hero={id ? allHeroes.find(h => h.id === id) : null}
+                    onClick={handleSlotClick}
+                  />
                 </Grid>
               ))}
             </Grid>
@@ -444,230 +518,268 @@ export const HeroRelationshipAnalysis: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* 英雄选择浮层 */}
+      {/* 英雄选择区域 - 插入在槽位下方，方便用户对比当前阵容 */}
       {selectingSlot && (
         <Box
           sx={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 50,
-            bgcolor: alpha(theme.palette.background.paper, 0.9),
-            backdropFilter: 'blur(20px)',
-            p: 4,
+            bgcolor: alpha(theme.palette.background.paper, 0.4),
+            borderRadius: 6,
+            border: '2px dashed',
+            borderColor: alpha(selectingSlot?.team === 'my' ? theme.palette.primary.main : theme.palette.error.main, 0.2),
+            p: { xs: 2, md: 3 },
             display: 'flex',
             flexDirection: 'column',
-            animation: 'fadeIn 0.3s ease-out'
+            height: 400, // 略微缩小高度以留给结果区更多空间
+            position: 'relative',
+            mb: 1,
+            zIndex: 10,
+            flexShrink: 0
           }}
         >
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
-              <Box
+          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 24,
+                    borderRadius: 1,
+                    bgcolor: selectingSlot.team === 'my' ? 'primary.main' : 'error.main'
+                  }}
+                />
+                <Typography variant="h6" sx={{ fontWeight: 900 }}>
+                  选择{selectingSlot.team === 'my' ? '己方' : '敌方'}第 {selectingSlot.index + 1} 位英雄
+                </Typography>
+              </Stack>
+              <IconButton
+                onClick={() => setSelectingSlot(null)}
                 sx={{
-                  width: 6,
-                  height: 24,
-                  borderRadius: 1,
-                  bgcolor: selectingSlot.team === 'my' ? 'primary.main' : 'error.main'
+                  bgcolor: alpha(theme.palette.action.hover, 0.05),
+                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }
                 }}
-              />
-              <Typography variant="h6" sx={{ fontWeight: 900 }}>
-                选择{selectingSlot.team === 'my' ? '己方' : '敌方'}第 {selectingSlot.index + 1} 位英雄
-              </Typography>
+              >
+                <X size={20} />
+              </IconButton>
             </Stack>
-            <IconButton
-              onClick={() => setSelectingSlot(null)}
+            
+            <Box sx={{ flex: 1, overflow: 'hidden' }}>
+              <HeroSelect 
+                value={selectingSlot.team === 'my' ? (myTeam[selectingSlot.index] || 0) : (enemyTeam[selectingSlot.index] || 0)} 
+                onChange={handleSelectHero} 
+                isStatic={true}
+                selectedIds={selectingSlot.team === 'my' 
+                  ? myTeam.filter((id, idx) => id !== null && idx !== selectingSlot.index) as number[] 
+                  : enemyTeam.filter((id, idx) => id !== null && idx !== selectingSlot.index) as number[]
+                }
+                onRemove={handleRemoveHero}
+                maxSelect={5}
+              />
+            </Box>
+            
+            <Typography
+              variant="caption"
               sx={{
-                bgcolor: alpha(theme.palette.action.hover, 0.05),
-                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }
+                mt: 1.5,
+                textAlign: 'center',
+                color: 'text.secondary',
+                fontStyle: 'italic',
+                fontWeight: 500
               }}
             >
-              <X size={20} />
-            </IconButton>
-          </Stack>
-          
-          <Box sx={{ flex: 1, overflow: 'hidden' }}>
-            <HeroSelect 
-              value={selectingSlot.team === 'my' ? (myTeam[selectingSlot.index] || 0) : (enemyTeam[selectingSlot.index] || 0)} 
-              onChange={handleSelectHero} 
-              isStatic={true}
-              selectedIds={selectingSlot.team === 'my' ? myTeam.filter((id): id is number => id !== null) : enemyTeam.filter((id): id is number => id !== null)}
-              onRemove={handleRemoveHero}
-              maxSelect={5}
-            />
+              提示：在上方搜索框输入英雄名或直接从列表中选择英雄
+            </Typography>
           </Box>
-          
-          <Typography
-            variant="caption"
-            sx={{
-              mt: 2,
-              textAlign: 'center',
-              color: 'text.secondary',
-              fontStyle: 'italic',
-              fontWeight: 500
-            }}
-          >
-            提示：在上方搜索框输入英雄名或直接从列表中选择英雄
-          </Typography>
         </Box>
       )}
 
       {/* 分析结果区 */}
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: 'auto',
-          pr: 1,
-          mt: 1,
-          position: 'relative',
-          zIndex: 1,
-          minHeight: 300,
-          '&::-webkit-scrollbar': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            bgcolor: alpha(theme.palette.divider, 0.1),
-            borderRadius: '10px',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            bgcolor: alpha(theme.palette.primary.main, 0.2),
-          }
-        }}
-      >
-        {analysisResults.partnerships.length === 0 && 
-         analysisResults.mySuppression.length === 0 && 
-         analysisResults.enemySuppression.length === 0 ? (
-          <Stack
-            alignItems="center"
-            justifyContent="center"
-            sx={{ height: '100%', py: 8, color: 'text.secondary', opacity: 0.5 }}
+      <Box sx={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <Box
+          ref={scrollContainerRef}
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            pr: 1,
+            mr: -1, // 抵消 padding 保证滚动条靠边
+            mt: 1,
+            position: 'relative',
+            zIndex: 1,
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              bgcolor: alpha(theme.palette.divider, 0.1),
+              borderRadius: '10px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              bgcolor: alpha(theme.palette.primary.main, 0.2),
+            }
+          }}
+        >
+          {analysisResults.partnerships.length === 0 &&
+            analysisResults.mySuppression.length === 0 &&
+            analysisResults.enemySuppression.length === 0 && !selectingSlot ? (
+            <Stack
+              alignItems="center"
+              justifyContent="center"
+              sx={{ height: '100%', py: 8, color: 'text.secondary', opacity: 0.5 }}
+            >
+              <Info size={48} />
+              <Typography variant="body2" sx={{ mt: 2, fontWeight: 800 }}>
+                选择英雄开始分析克制关系
+              </Typography>
+            </Stack>
+          ) : (
+            <Stack spacing={3}>
+              {/* 最佳搭档 */}
+              {analysisResults.partnerships.length > 0 && (
+                <Stack spacing={1.5}>
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+                    <TrendingUp size={14} color={theme.palette.success.main} />
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        fontWeight: 900,
+                        color: 'success.main',
+                        letterSpacing: '0.2em'
+                      }}
+                    >
+                      最佳搭档
+                    </Typography>
+                  </Stack>
+                  {analysisResults.partnerships.map((p, i) => (
+                    <Paper
+                      key={i}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        borderRadius: 4,
+                        bgcolor: alpha(theme.palette.success.main, 0.05),
+                        border: '1px solid',
+                        borderColor: alpha(theme.palette.success.main, 0.1),
+                        animation: 'fadeInUp 0.3s ease-out'
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'success.main', mb: 0.5 }}>
+                        {p.hero} & {p.partner}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                        {p.desc}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+
+              {/* 我方压制 */}
+              {analysisResults.mySuppression.length > 0 && (
+                <Stack spacing={1.5}>
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+                    <Zap size={14} color={theme.palette.primary.main} />
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        fontWeight: 900,
+                        color: 'primary.main',
+                        letterSpacing: '0.2em'
+                      }}
+                    >
+                      我方压制
+                    </Typography>
+                  </Stack>
+                  {analysisResults.mySuppression.map((s, i) => (
+                    <Paper
+                      key={i}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        borderRadius: 4,
+                        bgcolor: alpha(theme.palette.primary.main, 0.05),
+                        border: '1px solid',
+                        borderColor: alpha(theme.palette.primary.main, 0.1),
+                        animation: 'fadeInUp 0.3s ease-out'
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'primary.main', mb: 0.5 }}>
+                        {s.hero} <Box component="span" sx={{ mx: 1, color: 'text.secondary', fontWeight: 500 }}>压制</Box> {s.enemy}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                        {s.desc}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+
+              {/* 敌方压制 */}
+              {analysisResults.enemySuppression.length > 0 && (
+                <Stack spacing={1.5}>
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+                    <ShieldAlert size={14} color={theme.palette.error.main} />
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        fontWeight: 900,
+                        color: 'error.main',
+                        letterSpacing: '0.2em'
+                      }}
+                    >
+                      敌方压制
+                    </Typography>
+                  </Stack>
+                  {analysisResults.enemySuppression.map((s, i) => (
+                    <Paper
+                      key={i}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        borderRadius: 4,
+                        bgcolor: alpha(theme.palette.error.main, 0.05),
+                        border: '1px solid',
+                        borderColor: alpha(theme.palette.error.main, 0.1),
+                        animation: 'fadeInUp 0.3s ease-out'
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'error.main', mb: 0.5 }}>
+                        {s.enemy} <Box component="span" sx={{ mx: 1, color: 'text.secondary', fontWeight: 500 }}>压制</Box> {s.hero}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                        {s.desc}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+            </Stack>
+          )}
+        </Box>
+
+        {/* 滚动提示遮罩 */}
+        <Fade in={showScrollHint}>
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 60,
+              background: `linear-gradient(transparent, ${alpha(theme.palette.background.paper, 0.8)})`,
+              pointerEvents: 'none',
+              zIndex: 2,
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              pb: 1
+            }}
           >
-            <Info size={48} />
-            <Typography variant="body2" sx={{ mt: 2, fontWeight: 800 }}>
-              选择英雄开始分析克制关系
-            </Typography>
-          </Stack>
-        ) : (
-          <Stack spacing={3}>
-            {/* 最佳搭档 */}
-            {analysisResults.partnerships.length > 0 && (
-              <Stack spacing={1.5}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
-                  <TrendingUp size={14} color={theme.palette.success.main} />
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      fontWeight: 900,
-                      color: 'success.main',
-                      letterSpacing: '0.2em'
-                    }}
-                  >
-                    最佳搭档
-                  </Typography>
-                </Stack>
-                {analysisResults.partnerships.map((p, i) => (
-                  <Paper
-                    key={i}
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      borderRadius: 4,
-                      bgcolor: alpha(theme.palette.success.main, 0.05),
-                      border: '1px solid',
-                      borderColor: alpha(theme.palette.success.main, 0.1),
-                      animation: 'fadeInUp 0.3s ease-out'
-                    }}
-                  >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'success.main', mb: 0.5 }}>
-                      {p.hero} & {p.partner}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
-                      {p.desc}
-                    </Typography>
-                  </Paper>
-                ))}
-              </Stack>
-            )}
-
-            {/* 我方压制 */}
-            {analysisResults.mySuppression.length > 0 && (
-              <Stack spacing={1.5}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
-                  <Zap size={14} color={theme.palette.primary.main} />
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      fontWeight: 900,
-                      color: 'primary.main',
-                      letterSpacing: '0.2em'
-                    }}
-                  >
-                    我方压制
-                  </Typography>
-                </Stack>
-                {analysisResults.mySuppression.map((s, i) => (
-                  <Paper
-                    key={i}
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      borderRadius: 4,
-                      bgcolor: alpha(theme.palette.primary.main, 0.05),
-                      border: '1px solid',
-                      borderColor: alpha(theme.palette.primary.main, 0.1),
-                      animation: 'fadeInUp 0.3s ease-out'
-                    }}
-                  >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'primary.main', mb: 0.5 }}>
-                      {s.hero} <Box component="span" sx={{ mx: 1, color: 'text.secondary', fontWeight: 500 }}>压制</Box> {s.enemy}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
-                      {s.desc}
-                    </Typography>
-                  </Paper>
-                ))}
-              </Stack>
-            )}
-
-            {/* 敌方压制 */}
-            {analysisResults.enemySuppression.length > 0 && (
-              <Stack spacing={1.5}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
-                  <ShieldAlert size={14} color={theme.palette.error.main} />
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      fontWeight: 900,
-                      color: 'error.main',
-                      letterSpacing: '0.2em'
-                    }}
-                  >
-                    敌方压制
-                  </Typography>
-                </Stack>
-                {analysisResults.enemySuppression.map((s, i) => (
-                  <Paper
-                    key={i}
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      borderRadius: 4,
-                      bgcolor: alpha(theme.palette.error.main, 0.05),
-                      border: '1px solid',
-                      borderColor: alpha(theme.palette.error.main, 0.1),
-                      animation: 'fadeInUp 0.3s ease-out'
-                    }}
-                  >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'error.main', mb: 0.5 }}>
-                      {s.enemy} <Box component="span" sx={{ mx: 1, color: 'text.secondary', fontWeight: 500 }}>压制</Box> {s.hero}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
-                      {s.desc}
-                    </Typography>
-                  </Paper>
-                ))}
-              </Stack>
-            )}
-          </Stack>
-        )}
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: 'primary.main', animation: 'bounce 2s infinite' }}>
+              <Typography variant="caption" sx={{ fontWeight: 900, letterSpacing: '0.1em' }}>
+                更多分析内容，请滚动查看
+              </Typography>
+              <ChevronDown size={14} strokeWidth={3} />
+            </Stack>
+          </Box>
+        </Fade>
       </Box>
 
       {/* 装饰 */}

@@ -14,7 +14,7 @@ export default function FightAssistPage() {
         flexDirection: 'column'
       }}
     >
-      <Container maxWidth="lg" sx={{ flex: 1,  overflowY: 'auto', py: { md: 4, sm: 2 },zIndex: 10 }}>
+      <Container maxWidth="lg" sx={{ flex: 1, py: { md: 4, sm: 2 },zIndex: 10 }}>
         <Box>
           <HeroRelationshipAnalysis />
         </Box>

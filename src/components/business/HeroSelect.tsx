@@ -27,7 +27,7 @@ export const HeroSelect = ({
   onChange,
   isStatic = false,
   selectedIds = [],
-  onRemove,
+  onRemove: _onRemove,
   maxSelect = 5
 }: HeroSelectProps) => {
   const { heroList: allHeroes } = useHeroData();
@@ -41,12 +41,12 @@ export const HeroSelect = ({
   const selectedHeroes = useMemo(() => {
     return selectedIds.map(id => allHeroes.find(h => h.id === id)).filter(Boolean);
   }, [allHeroes, selectedIds]);
-
   useEffect(() => {
     if (isOpen && !isStatic && inputRef.current) {
       const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
+      console.log(selectedHeroes)
       return () => clearTimeout(timer);
     }
   }, [isOpen, isStatic]);
@@ -182,8 +182,8 @@ export const HeroSelect = ({
           animation: (!isStatic && isOpen) ? 'fadeInScale 0.2s ease-out' : 'none',
         }}
       >
-          {/* 已选择英雄展示区 - 仅在 Static 模式（对战辅助）下显示 */}
-          {isStatic && selectedHeroes.length > 0 && (
+        {/* 已选择英雄展示区 - 仅在 Static 模式（对战辅助）下显示 */}
+        {/* {isStatic && selectedHeroes.length > 0 && (
             <Box sx={{
               px: 2,
               py: 1.5,
@@ -244,111 +244,111 @@ export const HeroSelect = ({
                 </Box>
               ))}
             </Box>
-          )}
+          )} */}
 
-          {/* 搜索框 */}
-          <Box sx={{ p: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: alpha(theme.palette.text.primary, 0.02) }}>
-            <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ position: 'absolute', left: 12, display: 'flex', color: 'text.secondary' }}>
-                <Search size={16} strokeWidth={2.5} />
-              </Box>
-              <InputBase
-                inputRef={inputRef}
-                autoFocus
-                placeholder="搜索英雄名称..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                sx={{
-                  width: '100%',
-                  bgcolor: 'background.default',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2.5,
-                  pl: 5,
-                  pr: searchTerm ? 5 : 1.5,
-                  py: 0.5,
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  transition: 'border-color 0.2s',
-                  '&.Mui-focused': {
-                    borderColor: alpha(theme.palette.primary.main, 0.5),
-                  }
-                }}
-              />
-              {searchTerm && (
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSearchTerm('');
-                    inputRef.current?.focus();
-                  }}
-                  sx={{ position: 'absolute', right: 8, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
-                >
-                  <X size={14} strokeWidth={3} />
-                </IconButton>
-              )}
+        {/* 搜索框 */}
+        <Box sx={{ p: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: alpha(theme.palette.text.primary, 0.02) }}>
+          <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ position: 'absolute', left: 12, display: 'flex', color: 'text.secondary' }}>
+              <Search size={16} strokeWidth={2.5} />
             </Box>
-          </Box>
-
-          {/* 列表区 */}
-          <Box sx={{
-            flex: isStatic ? 1 : 'none',
-            maxHeight: isStatic ? 'none' : 320,
-            overflowY: 'auto',
-          }}>
-            {filteredHeroes.length > 0 ? (
-              filteredHeroes.map((hero) => {
-                const isSelected = Number(value) === hero.id || (isStatic && selectedIds.includes(hero.id));
-                const isDisabled = isStatic && selectedIds.includes(hero.id);
-
-                return (
-                  <Box
-                    key={hero.id}
-                    onClick={() => handleSelect(hero.id)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                      px: 2,
-                      py: 1.5,
-                      cursor: isDisabled ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.2s',
-                      bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
-                      color: isSelected ? 'primary.main' : 'text.primary',
-                      opacity: isDisabled ? 0.5 : 1,
-                      '&:hover': {
-                        bgcolor: isDisabled ? alpha(theme.palette.primary.main, 0.08) : alpha(theme.palette.text.primary, 0.04),
-                      }
-                    }}
-                  >
-                    <Avatar
-                      src={hero.heroSrc}
-                      alt={hero.heroName}
-                      variant="rounded"
-                      sx={{ width: 40, height: 40, borderRadius: 2.5, boxShadow: theme.shadows[1] }}
-                    />
-                    <Stack spacing={0.25}>
-                      <Typography sx={{ fontWeight: 800, fontSize: '0.925rem' }}>{hero.heroName}</Typography>
-                      <Typography variant="caption" sx={{ opacity: 0.6, fontWeight: 500 }}>
-                        {hero.heroTypes.join(' / ')}
-                      </Typography>
-                    </Stack>
-                    {isSelected && (
-                      <Box sx={{ ml: 'auto', display: 'flex', color: 'primary.main' }}>
-                        <Check size={18} strokeWidth={3} />
-                      </Box>
-                    )}
-                  </Box>
-                );
-              })
-            ) : (
-              <Box sx={{ py: 6, textAlign: 'center', color: 'text.secondary' }}>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>未找到相关英雄</Typography>
-              </Box>
+            <InputBase
+              inputRef={inputRef}
+              autoFocus
+              placeholder="搜索英雄名称..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              sx={{
+                width: '100%',
+                bgcolor: 'background.default',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2.5,
+                pl: 5,
+                pr: searchTerm ? 5 : 1.5,
+                py: 0.5,
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                transition: 'border-color 0.2s',
+                '&.Mui-focused': {
+                  borderColor: alpha(theme.palette.primary.main, 0.5),
+                }
+              }}
+            />
+            {searchTerm && (
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSearchTerm('');
+                  inputRef.current?.focus();
+                }}
+                sx={{ position: 'absolute', right: 8, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+              >
+                <X size={14} strokeWidth={3} />
+              </IconButton>
             )}
           </Box>
+        </Box>
+
+        {/* 列表区 */}
+        <Box sx={{
+          flex: isStatic ? 1 : 'none',
+          maxHeight: isStatic ? 'none' : 320,
+          overflowY: 'auto',
+        }}>
+          {filteredHeroes.length > 0 ? (
+            filteredHeroes.map((hero) => {
+              const isSelected = Number(value) === hero.id || (isStatic && selectedIds.includes(hero.id));
+              const isDisabled = isStatic && selectedIds.includes(hero.id);
+
+              return (
+                <Box
+                  key={hero.id}
+                  onClick={() => handleSelect(hero.id)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    px: 2,
+                    py: 1.5,
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
+                    color: isSelected ? 'primary.main' : 'text.primary',
+                    opacity: isDisabled ? 0.5 : 1,
+                    '&:hover': {
+                      bgcolor: isDisabled ? alpha(theme.palette.primary.main, 0.08) : alpha(theme.palette.text.primary, 0.04),
+                    }
+                  }}
+                >
+                  <Avatar
+                    src={hero.heroSrc}
+                    alt={hero.heroName}
+                    variant="rounded"
+                    sx={{ width: 40, height: 40, borderRadius: 2.5, boxShadow: theme.shadows[1] }}
+                  />
+                  <Stack spacing={0.25}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.925rem' }}>{hero.heroName}</Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.6, fontWeight: 500 }}>
+                      {hero.heroTypes.join(' / ')}
+                    </Typography>
+                  </Stack>
+                  {isSelected && (
+                    <Box sx={{ ml: 'auto', display: 'flex', color: 'primary.main' }}>
+                      <Check size={18} strokeWidth={3} />
+                    </Box>
+                  )}
+                </Box>
+              );
+            })
+          ) : (
+            <Box sx={{ py: 6, textAlign: 'center', color: 'text.secondary' }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>未找到相关英雄</Typography>
+            </Box>
+          )}
+        </Box>
       </Paper>
     </Box>
   );
