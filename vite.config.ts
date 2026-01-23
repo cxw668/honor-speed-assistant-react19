@@ -12,7 +12,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: process.env.DEPLOY_ENV === 'github'
+  base: (process.env.DEPLOY_TARGET === 'github' || process.env.GITHUB_ACTIONS === 'true')
     ? '/honor-speed-assistant-react19/'
     : '/',
   resolve: {
