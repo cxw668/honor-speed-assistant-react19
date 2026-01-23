@@ -12,7 +12,9 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/honor-speed-assistant-react19/',
+  base: process.env.DEPLOY_ENV === 'github'
+    ? '/honor-speed-assistant-react19/'
+    : '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
