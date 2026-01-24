@@ -14,8 +14,8 @@ export default function FightAssistPage() {
         flexDirection: 'column'
       }}
     >
-      <Container maxWidth="lg" sx={{ flex: 1, py: { md: 4, sm: 2 },zIndex: 10 }}>
-        <Box>
+      <Container maxWidth="lg" sx={{ flex: 1, py: { xs: 2, md: 4 }, zIndex: 10 }}>
+        <Box sx={{ height: '100%' }}>
           <HeroRelationshipAnalysis />
         </Box>
       </Container>

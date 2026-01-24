@@ -385,16 +385,16 @@ export const HeroRelationshipAnalysis: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 3, md: 4 },
-        borderRadius: 10,
+        p: { xs: 2, md: 4 },
+        borderRadius: { xs: 6, md: 10 },
         border: '1px solid',
         borderColor: alpha(theme.palette.divider, 0.1),
         bgcolor: alpha(theme.palette.background.paper, 0.6),
         backdropFilter: 'blur(20px)',
-        height: 'calc(100vh - 120px)', // 适配视口高度，减去顶部空间
+        height: { xs: 'calc(100dvh - 80px)', md: 'calc(100vh - 120px)' },
         display: 'flex',
         flexDirection: 'column',
-        gap: 3,
+        gap: { xs: 2, md: 3 },
         position: 'relative',
         overflow: 'hidden',
         '&:hover .decorative-circle': {
@@ -403,27 +403,28 @@ export const HeroRelationshipAnalysis: React.FC = () => {
         }
       }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ position: 'relative', zIndex: 1 }}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ position: 'relative', zIndex: 1, gap: 1 }}>
         <Stack direction="row" alignItems="center" spacing={1.5}>
           <Box
             sx={{
-              width: 40,
-              height: 40,
-              borderRadius: 3,
+              width: { xs: 32, md: 40 },
+              height: { xs: 32, md: 40 },
+              borderRadius: { xs: 2, md: 3 },
               bgcolor: alpha(theme.palette.primary.main, 0.1),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'primary.main'
+              color: 'primary.main',
+              flexShrink: 0
             }}
           >
-            <Swords size={20} />
+            <Swords size={18} />
           </Box>
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', tracking: '-0.02em' }}>
-              阵容克制关系分析
+            <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', tracking: '-0.02em', fontSize: { xs: '14px', md: '1.25rem' } }}>
+              阵容克制分析
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: { xs: '10px', md: '0.75rem' }, display: { xs: 'none', sm: 'block' } }}>
               基于大数据分析英雄间的羁绊与克制
             </Typography>
           </Box>
@@ -439,7 +440,8 @@ export const HeroRelationshipAnalysis: React.FC = () => {
             borderColor: alpha(theme.palette.divider, 0.2),
             color: 'text.secondary',
             fontWeight: 800,
-            px: 2,
+            px: { xs: 1.5, md: 2 },
+            fontSize: { xs: '11px', md: '0.8125rem' },
             '&:hover': {
               borderColor: 'error.main',
               color: 'error.main',
@@ -447,29 +449,30 @@ export const HeroRelationshipAnalysis: React.FC = () => {
             }
           }}
         >
-          重置阵容
+          重置
         </Button>
       </Stack>
 
       {/* 5V5 阵容选择区 */}
-      <Grid container spacing={4} sx={{ position: 'relative', zIndex: 1 }}>
+      <Grid container spacing={{ xs: 2, md: 4 }} sx={{ position: 'relative', zIndex: 1 }}>
         {/* 己方阵容 */}
-        <Grid size={{ xs: 6 }}>
-          <Stack spacing={2}>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack spacing={1.5}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
-              <Users size={16} color={theme.palette.primary.main} />
+              <Users size={14} color={theme.palette.primary.main} />
               <Typography
                 variant="overline"
                 sx={{
                   fontWeight: 900,
                   color: 'primary.main',
-                  letterSpacing: '0.1em'
+                  letterSpacing: '0.1em',
+                  fontSize: { xs: '10px', md: '0.75rem' }
                 }}
               >
                 己方阵容
               </Typography>
             </Stack>
-            <Grid container spacing={1.5}>
+            <Grid container spacing={1}>
               {myTeam.map((id, idx) => (
                 <Grid size={{ xs: 2.4 }} key={`my-${idx}`}>
                   <TeamSlot 
@@ -486,22 +489,23 @@ export const HeroRelationshipAnalysis: React.FC = () => {
         </Grid>
 
         {/* 敌方阵容 */}
-        <Grid size={{ xs: 6 }}>
-          <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, justifyContent: 'flex-end' }}>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack spacing={1.5}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
               <Typography
                 variant="overline"
                 sx={{
                   fontWeight: 900,
                   color: 'error.main',
-                  letterSpacing: '0.1em'
+                  letterSpacing: '0.1em',
+                  fontSize: { xs: '10px', md: '0.75rem' }
                 }}
               >
                 敌方阵容
               </Typography>
-              <Zap size={16} color={theme.palette.error.main} />
+              <Zap size={14} color={theme.palette.error.main} />
             </Stack>
-            <Grid container spacing={1.5}>
+            <Grid container spacing={1}>
               {enemyTeam.map((id, idx) => (
                 <Grid size={{ xs: 2.4 }} key={`enemy-${idx}`}>
                   <TeamSlot 
@@ -518,18 +522,18 @@ export const HeroRelationshipAnalysis: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* 英雄选择区域 - 插入在槽位下方，方便用户对比当前阵容 */}
+      {/* 英雄选择区域 */}
       {selectingSlot && (
         <Box
           sx={{
             bgcolor: alpha(theme.palette.background.paper, 0.4),
-            borderRadius: 6,
+            borderRadius: { xs: 4, md: 6 },
             border: '2px dashed',
             borderColor: alpha(selectingSlot?.team === 'my' ? theme.palette.primary.main : theme.palette.error.main, 0.2),
-            p: { xs: 2, md: 3 },
+            p: { xs: 1.5, md: 3 },
             display: 'flex',
             flexDirection: 'column',
-            height: 400, // 略微缩小高度以留给结果区更多空间
+            height: { xs: 320, md: 400 },
             position: 'relative',
             mb: 1,
             zIndex: 10,
@@ -537,28 +541,29 @@ export const HeroRelationshipAnalysis: React.FC = () => {
           }}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: { xs: 1, md: 2 } }}>
+              <Stack direction="row" alignItems="center" spacing={1.5}>
                 <Box
                   sx={{
-                    width: 6,
-                    height: 24,
+                    width: 4,
+                    height: 16,
                     borderRadius: 1,
                     bgcolor: selectingSlot.team === 'my' ? 'primary.main' : 'error.main'
                   }}
                 />
-                <Typography variant="h6" sx={{ fontWeight: 900 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 900, fontSize: { xs: '13px', md: '1rem' } }}>
                   选择{selectingSlot.team === 'my' ? '己方' : '敌方'}第 {selectingSlot.index + 1} 位英雄
                 </Typography>
               </Stack>
               <IconButton
+                size="small"
                 onClick={() => setSelectingSlot(null)}
                 sx={{
                   bgcolor: alpha(theme.palette.action.hover, 0.05),
                   '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }
                 }}
               >
-                <X size={20} />
+                <X size={18} />
               </IconButton>
             </Stack>
             
@@ -575,19 +580,6 @@ export const HeroRelationshipAnalysis: React.FC = () => {
                 maxSelect={5}
               />
             </Box>
-            
-            <Typography
-              variant="caption"
-              sx={{
-                mt: 1.5,
-                textAlign: 'center',
-                color: 'text.secondary',
-                fontStyle: 'italic',
-                fontWeight: 500
-              }}
-            >
-              提示：在上方搜索框输入英雄名或直接从列表中选择英雄
-            </Typography>
           </Box>
         </Box>
       )}
@@ -652,18 +644,18 @@ export const HeroRelationshipAnalysis: React.FC = () => {
                       key={i}
                       elevation={0}
                       sx={{
-                        p: 2,
-                        borderRadius: 4,
+                        p: { xs: 1.5, md: 2 },
+                        borderRadius: { xs: 3, md: 4 },
                         bgcolor: alpha(theme.palette.success.main, 0.05),
                         border: '1px solid',
                         borderColor: alpha(theme.palette.success.main, 0.1),
                         animation: 'fadeInUp 0.3s ease-out'
                       }}
                     >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'success.main', mb: 0.5 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'success.main', mb: 0.5, fontSize: { xs: '13px', md: '0.875rem' } }}>
                         {p.hero} & {p.partner}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500 }}>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontWeight: 500, fontSize: { xs: '12px', md: '0.875rem' } }}>
                         {p.desc}
                       </Typography>
                     </Paper>

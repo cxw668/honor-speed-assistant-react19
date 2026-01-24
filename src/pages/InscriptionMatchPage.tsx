@@ -8,7 +8,9 @@ import {
   Button,
   Stack,
   useTheme,
-  alpha
+  alpha,
+  useMediaQuery,
+  IconButton
 } from '@mui/material';
 import { HeroSelect } from '../components/business/HeroSelect';
 import { Toast } from '../components/atomic/Toast';
@@ -26,6 +28,7 @@ interface Inscription {
 
 export default function InscriptionMatchPage() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { heroList: allHeroes } = useHeroData();
   const simulationRef = useRef<InscriptionSimulationHandle>(null);
 
@@ -100,35 +103,36 @@ export default function InscriptionMatchPage() {
   const selectedHero = useMemo(() => allHeroes.find(h => h.id === selectedHeroId), [allHeroes, selectedHeroId]);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: isMobile ? 'auto' : 'hidden' }}>
       {/* 主体展示区 */}
-      <Container maxWidth="xl" sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 3, overflow: 'hidden', gap: 3 }}>
+      <Container maxWidth="xl" sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: { xs: 2, md: 3 }, overflow: isMobile ? 'visible' : 'hidden', gap: { xs: 2, md: 3 } }}>
 
         {/* 英雄选择与头部信息 */}
         <Paper
           elevation={0}
           sx={{
-            p: 3,
-            borderRadius: 6,
+            p: { xs: 2, md: 3 },
+            borderRadius: { xs: 4, md: 6 },
             border: '1px solid',
             borderColor: alpha(theme.palette.divider, 0.1),
             bgcolor: alpha(theme.palette.background.paper, 0.6),
             backdropFilter: 'blur(20px)',
             display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            animation: 'fadeInDown 0.7s ease-out'
-            , zIndex: 10
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: { xs: 2, md: 4 },
+            animation: 'fadeInDown 0.7s ease-out',
+            zIndex: 10
           }}
         >
-          <Box sx={{ position: 'relative', shrink: 0 }}>
+          <Box sx={{ position: 'relative', shrink: 0, alignSelf: { xs: 'center', sm: 'auto' } }}>
             <Avatar
               src={selectedHero?.heroSrc || selectedHero?.avatar}
               variant="rounded"
               sx={{
-                width: { xs: 80, md: 96 },
-                height: { xs: 80, md: 96 },
-                borderRadius: 5,
+                width: { xs: 64, md: 96 },
+                height: { xs: 64, md: 96 },
+                borderRadius: { xs: 2.5, md: 5 },
                 border: '2px solid',
                 borderColor: alpha(theme.palette.primary.main, 0.2),
                 boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.2)}`
@@ -142,23 +146,23 @@ export default function InscriptionMatchPage() {
                 right: 0,
                 bgcolor: alpha(theme.palette.common.black, 0.6),
                 backdropFilter: 'blur(4px)',
-                py: 0.5,
+                py: 0.2,
                 textAlign: 'center',
-                borderBottomLeftRadius: 20,
-                borderBottomRightRadius: 20
+                borderBottomLeftRadius: { xs: 10, md: 20 },
+                borderBottomRightRadius: { xs: 10, md: 20 }
               }}
             >
-              <Typography variant="caption" sx={{ color: 'common.white', fontWeight: 900 }}>
+              <Typography variant="caption" sx={{ color: 'common.white', fontWeight: 900, fontSize: { xs: '10px', md: '0.75rem' } }}>
                 {getHeroNameById(selectedHeroId)}
               </Typography>
             </Box>
           </Box>
 
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 3 }}>
-            <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: { xs: 'stretch', lg: 'center' }, justifyContent: 'space-between', gap: { xs: 1.5, md: 3 } }}>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
                 <Box sx={{ width: 4, height: 16, bgcolor: 'primary.main', borderRadius: 1, boxShadow: `0 0 8px ${theme.palette.primary.main}` }} />
-                <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', tracking: '-0.02em' }}>
+                <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', tracking: '-0.02em', fontSize: { xs: '16px', md: '1.25rem' } }}>
                   铭文搭配实验室
                 </Typography>
               </Stack>
@@ -167,15 +171,15 @@ export default function InscriptionMatchPage() {
               </Typography>
             </Box>
 
-            <Box sx={{ flex: 1, maxWidth: 600 }}>
-              <Typography variant="overline" sx={{ display: 'block', mb: 0.5, color: 'text.secondary', fontWeight: 900, letterSpacing: '0.1em' }}>
+            <Box sx={{ flex: 1, maxWidth: { xs: '100%', lg: 600 } }}>
+              <Typography variant="overline" sx={{ display: 'block', mb: 0.5, color: 'text.secondary', fontWeight: 900, letterSpacing: '0.1em', fontSize: { xs: '10px', md: '0.75rem' } }}>
                 更换目标英雄
               </Typography>
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <Box sx={{ width: 380, bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 3, p: 0.5, border: '1px solid', borderColor: alpha(theme.palette.divider, 0.1) }}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Box sx={{ flex: 1, bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 3, p: 0.5, border: '1px solid', borderColor: alpha(theme.palette.divider, 0.1) }}>
                   <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
                 </Box>
-                <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                <Box sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden' }}>
                   <Stack direction="row" spacing={1}>
                     {selectedHero?.heroTypes.map(type => (
                       <Box
@@ -201,48 +205,75 @@ export default function InscriptionMatchPage() {
               </Stack>
             </Box>
 
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Button
-                variant="contained"
-                startIcon={<Zap size={14} fill="currentColor" />}
-                onClick={() => simulationRef.current?.applyRecommended()}
-                sx={{
-                  display: { xs: 'none', md: 'flex' },
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                  color: 'primary.main',
-                  fontWeight: 800,
-                  borderRadius: 3,
-                  border: '1px solid',
-                  borderColor: alpha(theme.palette.primary.main, 0.2),
-                  boxShadow: 'none',
-                  '&:hover': {
-                    bgcolor: 'primary.main',
-                    color: 'primary.contrastText'
-                  }
-                }}
-              >
-                一键套用
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<RotateCcw size={14} />}
-                onClick={() => simulationRef.current?.clear()}
-                sx={{
-                  display: { xs: 'none', md: 'flex' },
-                  borderColor: alpha(theme.palette.divider, 0.2),
-                  color: 'text.secondary',
-                  fontWeight: 800,
-                  borderRadius: 3,
-                  '&:hover': {
-                    borderColor: 'error.main',
-                    color: 'error.main',
-                    bgcolor: alpha(theme.palette.error.main, 0.05)
-                  }
-                }}
-              >
-                重置
-              </Button>
-              <Box sx={{ width: 160 }}>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
+              {isMobile ? (
+                <>
+                  <IconButton 
+                    onClick={() => simulationRef.current?.applyRecommended()}
+                    sx={{ 
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: 'primary.main',
+                      borderRadius: 2,
+                      '&:hover': { bgcolor: 'primary.main', color: 'white' }
+                    }}
+                  >
+                    <Zap size={18} />
+                  </IconButton>
+                  <IconButton 
+                    onClick={() => simulationRef.current?.clear()}
+                    sx={{ 
+                      bgcolor: alpha(theme.palette.divider, 0.05),
+                      color: 'text.secondary',
+                      borderRadius: 2,
+                      '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.1), color: 'error.main' }
+                    }}
+                  >
+                    <RotateCcw size={18} />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="contained"
+                    startIcon={<Zap size={14} fill="currentColor" />}
+                    onClick={() => simulationRef.current?.applyRecommended()}
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: 'primary.main',
+                      fontWeight: 800,
+                      borderRadius: 3,
+                      border: '1px solid',
+                      borderColor: alpha(theme.palette.primary.main, 0.2),
+                      boxShadow: 'none',
+                      '&:hover': {
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText'
+                      }
+                    }}
+                  >
+                    一键套用
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<RotateCcw size={14} />}
+                    onClick={() => simulationRef.current?.clear()}
+                    sx={{
+                      borderColor: alpha(theme.palette.divider, 0.2),
+                      color: 'text.secondary',
+                      fontWeight: 800,
+                      borderRadius: 3,
+                      '&:hover': {
+                        borderColor: 'error.main',
+                        color: 'error.main',
+                        bgcolor: alpha(theme.palette.error.main, 0.05)
+                      }
+                    }}
+                  >
+                    重置
+                  </Button>
+                </>
+              )}
+              <Box sx={{ width: { xs: 'auto', sm: 160 }, flex: { xs: 1, sm: 'none' } }}>
                 <CopyBtn
                   text={copyText}
                   title={recommendDesc?.replace('Tips：', '')}
@@ -252,7 +283,7 @@ export default function InscriptionMatchPage() {
           </Box>
         </Paper>
 
-        <Box sx={{ flex: 1, minHeight: 0, animation: 'fadeInUp 0.5s ease-out' }}>
+        <Box sx={{ flex: 1, minHeight: { xs: '800px', md: 0 }, animation: 'fadeInUp 0.5s ease-out' }}>
           <InscriptionSimulation
             ref={simulationRef}
             recommendedInscriptions={currentInscriptions}

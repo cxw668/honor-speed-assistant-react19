@@ -7,7 +7,9 @@ import {
   Card,
   CardContent,
   Container,
-  alpha
+  alpha,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import HeroIcon from '@mui/icons-material/PersonSearch';
 import EquipmentIcon from '@mui/icons-material/Shield';
@@ -46,12 +48,14 @@ export const HomePage = () => {
       isPrimary: false
     }
   ];
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   return (
     <Box sx={{ minHeight: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {/* Banner 区 */}
       <Box
         sx={{
-          minHeight: { xs: 'auto', md: 'calc(100vh - 72px)' },
+          minHeight: { xs: 'calc(100vh - 64px)', md: 'calc(100vh - 72px)' },
           py: { xs: 10, md: 0 },
           position: 'relative',
           overflow: 'hidden',
@@ -271,9 +275,9 @@ export const HomePage = () => {
             animation: 'float 3s infinite ease-in-out'
           }}
         >
-          <Typography sx={{ fontSize: '10px', color: 'text.secondary', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase' }}>
+          {!isMobile && <Typography sx={{ fontSize: '10px', color: 'text.secondary', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase' }}>
             Explore Features
-          </Typography>
+          </Typography>}
           <Box sx={{ width: '1px', height: '40px', background: (theme) => `linear-gradient(to bottom, ${theme.palette.primary.main}, transparent)` }} />
         </Box>
       </Box>

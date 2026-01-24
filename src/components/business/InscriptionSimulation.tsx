@@ -12,8 +12,9 @@ import {
   TouchSensor,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Box, Typography, Stack, alpha, useTheme, Tooltip } from '@mui/material';
+import { Box, Typography, Stack, alpha, useTheme, Tooltip, useMediaQuery } from '@mui/material';
 import { Trash2, RotateCcw, Zap, Info, LayoutGrid } from 'lucide-react';
+import { Toast } from '../atomic/Toast';
 import epigraphData from '../../mock/equipment/epigraph.json';
 import epigraphImgData from '../../mock/equipment/epigraph_img.json';
 
@@ -179,23 +180,23 @@ function InscriptionSlot({
 
 // 描述弹窗
 function descDialog(text: string, type: 'red' | 'blue' | 'green', theme: any) {
-  const color = type === 'red' ? theme.palette.error.main : type === 'blue' ?  '#00b0ff' : theme.palette.success.main;
+  const color = type === 'red' ? theme.palette.error.main : type === 'blue' ? '#00b0ff' : theme.palette.success.main;
   return (
     <Box sx={{ p: 0.5 }}>
       <Stack direction="row" alignItems="center" spacing={0.8} sx={{ mb: 0.8 }}>
-        <Box 
-          sx={{ 
-            width: 8, 
-            height: 8, 
-            borderRadius: '50%', 
+        <Box
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
             bgcolor: color,
             boxShadow: `0 0 8px ${color}`
-          }} 
+          }}
         />
-        <Typography 
-          sx={{ 
-            fontSize: '12px', 
-            fontWeight: 800, 
+        <Typography
+          sx={{
+            fontSize: '12px',
+            fontWeight: 800,
             color,
             letterSpacing: '0.05em'
           }}
@@ -203,9 +204,9 @@ function descDialog(text: string, type: 'red' | 'blue' | 'green', theme: any) {
           {type === 'red' ? '红色铭文' : type === 'blue' ? '蓝色铭文' : '绿色铭文'}
         </Typography>
       </Stack>
-      <Typography 
-        sx={{ 
-          fontSize: '11px', 
+      <Typography
+        sx={{
+          fontSize: '11px',
           lineHeight: 1.6,
           color: (theme: any) => alpha(theme.palette.text.primary, 0.9),
           fontWeight: 500,
@@ -229,9 +230,13 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
   onClose: _onClose
 }, ref) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [slots, setSlots] = useState<Record<string, InscriptionData | null>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<InscriptionData | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
 
   useImperativeHandle(ref, () => ({
     applyRecommended: handleApplyRecommended,
@@ -338,6 +343,33 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
     return stats;
   }, [slots]);
 
+  const handleQuickAdd = (inscription: InscriptionData) => {
+    if (!isMobile) return;
+
+    // 寻找第一个可用的对应颜色的槽位
+    const type = inscription.type;
+    for (let i = 0; i < 10; i++) {
+      const slotId = `${type}-${i}`;
+      if (!slots[slotId]) {
+        setSlots(prev => ({
+          ...prev,
+          [slotId]: inscription,
+        }));
+        
+        // 显示添加成功的提示
+        setToastMsg(`已添加 ${inscription.name}\n${inscription.attr_desc}`);
+        setToastType('success');
+        setShowToast(true);
+        return;
+      }
+    }
+    
+    // 如果没有空位，显示错误提示
+    setToastMsg(`${type === 'red' ? '红色' : type === 'blue' ? '蓝色' : '绿色'}铭文槽已满`);
+    setToastType('error');
+    setShowToast(true);
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
     setActiveData(event.active.data.current as InscriptionData);
@@ -420,14 +452,14 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
             flex: 1,
             display: 'flex',
             flexDirection: { xs: 'column', lg: 'row' },
-            gap: 3,
+            gap: { xs: 2, md: 3 },
             bgcolor: (theme) => alpha(theme.palette.background.default, 0.8),
             p: { xs: 2, md: 4 },
-            borderRadius: '40px',
+            borderRadius: { xs: '24px', md: '40px' },
             border: '1px solid',
             borderColor: (theme) => alpha(theme.palette.divider, 1),
             boxShadow: 10,
-            overflow: 'hidden',
+            overflow: { xs: 'visible', lg: 'hidden' },
             position: 'relative'
           }}
         >
@@ -439,7 +471,8 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
               opacity: 0.03,
               pointerEvents: 'none',
               backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)',
-              backgroundSize: '30px 30px'
+              backgroundSize: '30px 30px',
+              display: { xs: 'none', md: 'block' }
             }}
           />
           <Box
@@ -450,7 +483,8 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
               width: '100%',
               height: '100%',
               background: (theme) => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, transparent 50%, ${alpha(theme.palette.info.main || '#00b0ff', 0.05)} 100%)`,
-              pointerEvents: 'none'
+              pointerEvents: 'none',
+              borderRadius: 'inherit'
             }}
           />
 
@@ -460,18 +494,19 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
               sx={{
                 bgcolor: (theme) => alpha(theme.palette.background.paper, 0.3),
                 backdropFilter: 'blur(20px)',
-                p: 2.5,
-                borderRadius: '32px',
+                p: { xs: 2, md: 2.5 },
+                borderRadius: { xs: '20px', md: '32px' },
                 border: '1px solid',
                 borderColor: (theme) => alpha(theme.palette.divider, 1),
-                height: '100%',
+                height: { xs: 'auto', lg: '100%' },
+                maxHeight: { xs: '400px', lg: 'none' },
                 display: 'flex',
                 flexDirection: 'column'
               }}
             >
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3, px: 0.5 }}>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: { xs: 1.5, md: 3 }, px: 0.5 }}>
                 <LayoutGrid size={12} style={{ opacity: 0.4 }} />
-                <Typography
+                {!isMobile && <Typography
                   variant="caption"
                   sx={{
                     fontWeight: 900,
@@ -481,14 +516,20 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                   }}
                 >
                   Epigraph Warehouse
-                </Typography>
+                </Typography>}
+
+                {isMobile && (
+                  <Typography variant="caption" sx={{ ml: 'auto', color: 'primary.main', fontWeight: 800, fontSize: '12px', fontSynthesisWeight: 700 }}>
+                    点击图标快速添加
+                  </Typography>
+                )}
               </Stack>
 
               <Box
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 4,
+                  gap: { xs: 2, md: 4 },
                   overflowY: 'auto',
                   pr: 1,
                   flex: 1,
@@ -497,7 +538,7 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                 }}
               >
                 {(['red', 'blue', 'green'] as const).map(type => (
-                  <Stack key={type} spacing={2}>
+                  <Stack key={type} spacing={1.5}>
                     <Box sx={{ px: 0.5 }}>
                       <Typography
                         component="span"
@@ -517,17 +558,17 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                     <Box
                       sx={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: 2,
-                        rowGap: 2
+                        gridTemplateColumns: { xs: 'repeat(4, 1fr)', sm: 'repeat(5, 1fr)', lg: 'repeat(3, 1fr)' },
+                        gap: { xs: 1.5, md: 2 },
                       }}
                     >
                       {allInscriptions.filter(ins => ins.type === type).map(ins => (
-                        <Tooltip 
+                        <Tooltip
                           key={ins.name}
-                          placement='top-start' 
-                          title={descDialog(ins.attr_desc, ins.type, theme)} 
+                          placement='top'
+                          title={descDialog(ins.attr_desc, ins.type, theme)}
                           arrow
+                          disableTouchListener={isMobile}
                           slotProps={{
                             tooltip: {
                               sx: {
@@ -548,7 +589,12 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                             }
                           }}
                         >
-                          <Stack alignItems="center" spacing={0.5}>
+                          <Stack
+                            alignItems="center"
+                            spacing={0.5}
+                            onClick={() => handleQuickAdd(ins)}
+                            sx={{ cursor: 'pointer' }}
+                          >
                             <DraggableInscription data={ins} />
                             <Typography
                               noWrap
@@ -573,14 +619,14 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
           </Box>
 
           {/* 中间：六边形网格铭文池 */}
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyCenter: 'center', minHeight: 0, position: 'relative', zIndex: 9, py: 5 }}>
-            <Box sx={{ position: 'relative', width: '100%', maxWidth: '500px', aspectRadio: '1/1', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: { xs: 'scale(0.8)', lg: 'scale(1)' } }}>
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: { xs: 350, md: 0 }, position: 'relative', zIndex: 9, py: { xs: 2, md: 5 } }}>
+            <Box sx={{ position: 'relative', width: '100%', maxWidth: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: { xs: 'scale(0.7)', sm: 'scale(0.85)', lg: 'scale(1)' } }}>
               {/* 中心装饰 */}
               <Box sx={{ position: 'absolute', width: 128, height: 128, opacity: 0.1, pointerEvents: 'none' }}>
                 <Zap size={128} color={theme.palette.primary.main} fill={theme.palette.primary.main} />
               </Box>
 
-              <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+              <Box sx={{ position: 'relative', width: '100%', height: '100%', minHeight: 300 }}>
                 {POOL_LAYOUT.map((slot) => {
                   const hexW = 56; // 基础宽度
                   const hexH = 64; // 基础高度
@@ -609,27 +655,28 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
           </Box>
 
           {/* 右侧：属性面板 */}
-          <Box sx={{ width: { lg: '25%' }, display: 'flex', flexDirection: 'column', gap: 3, position: 'relative', zIndex: 10 }}>
+          <Box sx={{ width: { lg: '25%' }, display: 'flex', flexDirection: 'column', gap: 2, position: 'relative', zIndex: 10 }}>
             {/* 总等级 */}
             <Box
               sx={{
                 bgcolor: (theme) => alpha(theme.palette.background.paper, 0.3),
                 backdropFilter: 'blur(20px)',
-                p: 4,
-                borderRadius: '32px',
+                p: { xs: 2, md: 4 },
+                borderRadius: { xs: '20px', md: '32px' },
                 border: '1px solid',
                 borderColor: (theme) => alpha(theme.palette.divider, 1),
                 display: 'flex',
-                flexDirection: 'column',
+                flexDirection: { xs: 'row', md: 'column' },
                 alignItems: 'center',
+                justifyContent: { xs: 'center', md: 'flex-start' },
+                gap: { xs: 3, md: 0 },
                 '&:hover': { bgcolor: (theme) => alpha(theme.palette.background.paper, 0.4) },
                 transition: 'background-color 0.3s'
               }}
             >
-              <Box sx={{ position: 'relative', mb: 2 }}>
+              <Box sx={{ position: 'relative', mb: { xs: 0, md: 2 } }}>
                 <Box
                   sx={{
-                    w: 96, h: 96,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -640,15 +687,16 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                     position: 'relative',
                     clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                     bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
-                    width: 96, height: 96,
+                    width: { xs: 64, md: 96 },
+                    height: { xs: 64, md: 96 },
                     '&:hover': { borderColor: 'primary.main', bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1) },
                     transition: 'all 0.3s'
                   }}
                 >
-                  <Typography variant="h4" sx={{ fontWeight: 900, position: 'relative', zIndex: 10 }}>
+                  <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 900, position: 'relative', zIndex: 10 }}>
                     {Object.values(slots).filter(Boolean).length * 5}
                   </Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 900, opacity: 0.4, position: 'relative', zIndex: 10, textTransform: 'uppercase', letterSpacing: '-0.05em' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 900, opacity: 0.4, position: 'relative', zIndex: 10, textTransform: 'uppercase', letterSpacing: '-0.05em', fontSize: '8px' }}>
                     Level
                   </Typography>
                 </Box>
@@ -656,7 +704,7 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                 <Box
                   sx={{
                     position: 'absolute',
-                    inset: '-10px',
+                    inset: '-8px',
                     border: '1px solid',
                     borderColor: (theme) => alpha(theme.palette.primary.main, 0.1),
                     borderRadius: '50%',
@@ -668,12 +716,14 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                   }}
                 />
               </Box>
-              <Typography sx={{ fontSize: '14px', fontWeight: 900, color: (theme) => alpha(theme.palette.text.primary, 0.8), textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                铭文总等级
-              </Typography>
-              <Typography sx={{ fontSize: '10px', color: (theme) => alpha(theme.palette.text.primary, 0.3), mt: 0.5 }}>
-                Total Epigraph Level
-              </Typography>
+              <Box sx={{ textAlign: { xs: 'left', md: 'center' } }}>
+                <Typography sx={{ fontSize: { xs: '12px', md: '14px' }, fontWeight: 900, color: (theme) => alpha(theme.palette.text.primary, 0.8), textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  铭文总等级
+                </Typography>
+                <Typography sx={{ fontSize: '10px', color: (theme) => alpha(theme.palette.text.primary, 0.3), mt: 0.2 }}>
+                  Total Epigraph Level
+                </Typography>
+              </Box>
             </Box>
 
             {/* 属性列表 */}
@@ -681,13 +731,14 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
               sx={{
                 bgcolor: (theme) => alpha(theme.palette.background.paper, 0.3),
                 backdropFilter: 'blur(20px)',
-                p: 3,
-                borderRadius: '32px',
+                p: { xs: 2, md: 3 },
+                borderRadius: { xs: '20px', md: '32px' },
                 border: '1px solid',
                 borderColor: (theme) => alpha(theme.palette.divider, 1),
                 flex: 1,
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                minHeight: { xs: '200px', lg: 'none' }
               }}
             >
 
@@ -726,7 +777,7 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                   <Stack flex={1} alignItems="center" justifyContent="center" sx={{ opacity: 0.2, p: 3 }} spacing={1}>
                     <Box
                       sx={{
-                        width: 48, height: 48,
+                        width: 32, height: 32,
                         border: '1px solid',
                         borderColor: 'currentColor',
                         borderRadius: '50%',
@@ -736,9 +787,9 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
                         clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
                       }}
                     >
-                      <RotateCcw size={20} />
+                      <RotateCcw size={16} />
                     </Box>
-                    <Typography variant="caption" sx={{ fontWeight: 700, fontStyle: 'italic', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, fontStyle: 'italic', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '10px' }}>
                       No Attributes
                     </Typography>
                   </Stack>
@@ -746,7 +797,7 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
               </Box>
 
               {/* 底部提示 */}
-              <Box sx={{ pt: 2, borderTop: '1px solid', borderColor: (theme) => alpha(theme.palette.divider, 1), display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+              <Box sx={{ pt: 1.5, mt: 1.5, borderTop: '1px solid', borderColor: (theme) => alpha(theme.palette.divider, 1), display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                 <Box sx={{ p: 0.5, borderRadius: '4px', bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05), color: (theme) => alpha(theme.palette.text.primary, 0.4) }}>
                   <Info size={10} />
                 </Box>
@@ -766,6 +817,14 @@ export const InscriptionSimulation = forwardRef<InscriptionSimulationHandle, Ins
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {showToast && (
+        <Toast
+          message={toastMsg}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
+      )}
     </Box>
   );
 });

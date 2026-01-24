@@ -13,7 +13,8 @@ import {
   useTheme,
   alpha,
   IconButton,
-  Tooltip
+  Tooltip,
+  useMediaQuery
 } from '@mui/material';
 import {
   Search,
@@ -21,11 +22,12 @@ import {
   Zap,
   Hammer,
   RotateCcw,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import { HeroSelect } from '../components/business/HeroSelect';
 import { EquipmentList } from '../components/business/EquipmentList';
 import { CopyBtn } from '../components/atomic/CopyBtn';
+import { Dialog } from '../components/atomic/Dialog';
 import { useHeroData } from '../hooks/useHeroData';
 import heroDetailsData from '../mock/hero/hero_details.json';
 import summonerSkills from '../mock/equipment/summonerSkills.json';
@@ -56,6 +58,7 @@ interface EquipmentSet {
 
 export default function EquipmentRecommendPage() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { heroList: allHeroes } = useHeroData();
   const [searchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as 'equipment' | 'skills' | 'tools') || 'equipment';
@@ -81,6 +84,7 @@ export default function EquipmentRecommendPage() {
   const [equipmentSets, setEquipmentSets] = useState<EquipmentSet[]>([]);
   const [toolSearch, setToolSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(0);
+  const [selectedToolForDetail, setSelectedToolForDetail] = useState<any>(null);
 
   // 获取英雄名称的辅助函数
   const getHeroNameById = (id: number) => {
@@ -166,22 +170,26 @@ export default function EquipmentRecommendPage() {
 
   return (
     <Box sx={{ height: '100%', bgcolor: 'background.default', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* 左侧二级导航菜单 */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, overflow: 'hidden' }}>
+        {/* 左侧二级导航菜单 (移动端改为顶部横向菜单) */}
         <Box
           component="aside"
           sx={{
-            width: { xs: 80, md: 280 },
+            width: { xs: '100%', md: 280 },
             shrink: 0,
-            borderRight: '1px solid',
+            borderRight: { xs: 'none', md: '1px solid' },
+            borderBottom: { xs: '1px solid', md: 'none' },
             borderColor: alpha(theme.palette.divider, 0.1),
             bgcolor: alpha(theme.palette.background.paper, 0.4),
             backdropFilter: 'blur(20px)',
             display: 'flex',
-            flexDirection: 'column',
-            py: 4,
-            px: 2,
-            gap: 1
+            flexDirection: { xs: 'row', md: 'column' },
+            py: { xs: 1, md: 4 },
+            px: { xs: 1, md: 2 },
+            gap: 1,
+            zIndex: 200,
+            overflowX: 'auto',
+            '&::-webkit-scrollbar': { display: 'none' }
           }}
         >
           <Box sx={{ px: 2, mb: 4, display: { xs: 'none', md: 'block' } }}>
@@ -214,19 +222,21 @@ export default function EquipmentRecommendPage() {
                 }}
                 startIcon={<Box sx={{ display: { xs: 'none', md: 'flex' } }}>{tab.icon}</Box>}
                 sx={{
+                  flexShrink: 0,
                   justifyContent: { xs: 'center', md: 'flex-start' },
-                  px: { xs: 0, md: 3 },
-                  py: 2,
-                  borderRadius: 4,
+                  px: { xs: 2, md: 3 },
+                  py: { xs: 1, md: 2 },
+                  borderRadius: { xs: 2, md: 4 },
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   color: isActive ? 'primary.main' : 'text.secondary',
                   bgcolor: isActive ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
                   fontWeight: 800,
-                  fontSize: '15px',
+                  fontSize: { xs: '13px', md: '15px' },
+                  whiteSpace: 'nowrap',
                   '&:hover': {
                     bgcolor: isActive ? alpha(theme.palette.primary.main, 0.15) : alpha(theme.palette.action.hover, 0.05),
                     color: isActive ? 'primary.main' : 'text.primary',
-                    transform: 'translateX(4px)'
+                    transform: { xs: 'none', md: 'translateX(4px)' }
                   },
                   '& .MuiButton-startIcon': {
                     mr: { xs: 0, md: 2 },
@@ -236,7 +246,7 @@ export default function EquipmentRecommendPage() {
                   }
                 }}
               >
-                <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, tracking: '0.02em' }}>
+                <Box component="span" sx={{ display: { xs: 'block', md: 'block' }, tracking: '0.02em' }}>
                   {tab.label}
                 </Box>
                 {isActive && (
@@ -252,7 +262,7 @@ export default function EquipmentRecommendPage() {
                     }}
                   />
                 )}
-                <Box sx={{ display: { xs: 'flex', md: 'none' } }}>{tab.icon}</Box>
+                <Box sx={{ display: { xs: 'none', md: 'none' } }}>{tab.icon}</Box>
               </MuiButton>
             );
           })}
@@ -283,35 +293,36 @@ export default function EquipmentRecommendPage() {
         </Box>
 
         {/* 主内容区 */}
-        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: { xs: 2, md: 4 } }}>
-          <Box sx={{ maxWidth: '1600px', mx: 'auto', w: '100%', h: '100%', display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
+        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ maxWidth: '1600px', mx: 'auto', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: { md: 4, xs: 2 }, overflow: 'hidden' }}>
             {activeTab === 'equipment' ? (
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
                 {/* 英雄选择面板 */}
                 <Paper
                   elevation={0}
                   sx={{
-                    p: 3,
-                    borderRadius: 6,
+                    p: { xs: 2, md: 3 },
+                    borderRadius: { xs: 4, md: 6 },
                     border: '1px solid',
                     borderColor: alpha(theme.palette.divider, 0.1),
                     bgcolor: alpha(theme.palette.background.paper, 0.6),
                     backdropFilter: 'blur(20px)',
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: { xs: 2, md: 4 },
                     zIndex: 150,
                     animation: 'fadeInDown 0.7s ease-out'
                   }}
                 >
-                  <Box sx={{ position: 'relative', flexShrink: 0 }}>
+                  <Box sx={{ position: 'relative', flexShrink: 0, alignSelf: { xs: 'center', sm: 'auto' } }}>
                     <Avatar
                       src={allHeroes.find(h => h.id === selectedHeroId)?.heroSrc || allHeroes.find(h => h.id === selectedHeroId)?.avatar}
                       variant="rounded"
                       sx={{
-                        width: { xs: 80, md: 96 },
-                        height: { xs: 80, md: 96 },
-                        borderRadius: 5,
+                        width: { xs: 72, md: 96 },
+                        height: { xs: 72, md: 96 },
+                        borderRadius: { xs: 3, md: 5 },
                         border: '2px solid',
                         borderColor: alpha(theme.palette.primary.main, 0.2),
                         boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.2)}`
@@ -327,8 +338,8 @@ export default function EquipmentRecommendPage() {
                         backdropFilter: 'blur(4px)',
                         py: 0.5,
                         textAlign: 'center',
-                        borderBottomLeftRadius: 20,
-                        borderBottomRightRadius: 20
+                        borderBottomLeftRadius: { xs: 12, md: 20 },
+                        borderBottomRightRadius: { xs: 12, md: 20 }
                       }}
                     >
                       <Typography variant="caption" sx={{ color: 'common.white', fontWeight: 900 }}>
@@ -337,11 +348,11 @@ export default function EquipmentRecommendPage() {
                     </Box>
                   </Box>
 
-                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 3 }}>
-                    <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: { xs: 'stretch', lg: 'center' }, justifyContent: 'space-between', gap: { xs: 2, md: 3 } }}>
+                    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
                       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
                         <Box sx={{ width: 4, height: 16, bgcolor: 'primary.main', borderRadius: 1, boxShadow: `0 0 8px ${theme.palette.primary.main}` }} />
-                        <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', tracking: '-0.02em' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', tracking: '-0.02em', fontSize: { xs: '16px', md: '1.25rem' } }}>
                           智能出装实验室
                         </Typography>
                       </Stack>
@@ -350,58 +361,61 @@ export default function EquipmentRecommendPage() {
                       </Typography>
                     </Box>
 
-                    <Box sx={{ flex: 1, maxWidth: 600 }}>
-                      <Typography variant="overline" sx={{ display: 'block', mb: 0.5, color: 'text.secondary', fontWeight: 900, letterSpacing: '0.1em' }}>
-                        更换目标英雄
-                      </Typography>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Box sx={{ width: 380, bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 3, p: 0.5, border: '1px solid', borderColor: alpha(theme.palette.divider, 0.1) }}>
-                          <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
-                        </Box>
-                        <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                          <Stack direction="row" spacing={1}>
-                            {allHeroes.find(h => h.id === selectedHeroId)?.heroTypes.map(type => (
-                              <Box
-                                key={type}
-                                sx={{
-                                  px: 1.5,
-                                  py: 0.5,
-                                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                  color: 'primary.main',
-                                  fontSize: '10px',
-                                  fontWeight: 900,
-                                  borderRadius: 2,
-                                  border: '1px solid',
-                                  borderColor: alpha(theme.palette.primary.main, 0.2),
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                {type}
-                              </Box>
-                            ))}
-                          </Stack>
-                        </Box>
-                      </Stack>
-                    </Box>
+                    <Stack flexDirection='row' sx={{ alignItems: 'center' }}>
+                      <Box sx={{ flex: 1, maxWidth: { xs: '100%', lg: 600 } }}>
+                        <Typography variant="overline" sx={{ display: 'block', mb: 0.5, color: 'text.secondary', fontWeight: 900, letterSpacing: '0.1em' }}>
+                          更换目标英雄
+                        </Typography>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Box sx={{ flex: 1, bgcolor: alpha(theme.palette.action.hover, 0.05), borderRadius: 3, p: 0.5, border: '1px solid', borderColor: alpha(theme.palette.divider, 0.1) }}>
+                            <HeroSelect value={selectedHeroId} onChange={setSelectedHeroId} />
+                          </Box>
+                          <Box sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden' }}>
+                            <Stack direction="row" spacing={1}>
+                              {allHeroes.find(h => h.id === selectedHeroId)?.heroTypes.map(type => (
+                                <Box
+                                  key={type}
+                                  sx={{
+                                    px: 1.5,
+                                    py: 0.5,
+                                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                    color: 'primary.main',
+                                    fontSize: '10px',
+                                    fontWeight: 900,
+                                    borderRadius: 2,
+                                    border: '1px solid',
+                                    borderColor: alpha(theme.palette.primary.main, 0.2),
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  {type}
+                                </Box>
+                              ))}
+                            </Stack>
+                          </Box>
+                        </Stack>
+                      </Box>
 
-                    <Box sx={{ width: 160 }}>
-                      <CopyBtn text={copyText} />
-                    </Box>
+                      <Box sx={{ mt: 4, ml: 1, width: { xs: 140, sm: 160 } }}>
+                        <CopyBtn text={copyText} />
+                      </Box>
+                    </Stack>
+
                   </Box>
                 </Paper>
 
                 {equipmentSets.length > 0 ? (
-                  <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    <Grid container spacing={3} sx={{ flex: 1, overflow: 'hidden' }}>
+                  <Box sx={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+                    <Grid container spacing={3} sx={{ flexShrink: 0 }}>
                       {equipmentSets.slice(0, 2).map((set, setIdx) => (
-                        <Grid size={{ xs: 12, lg: 6 }} key={setIdx} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <Grid size={{ xs: 12, lg: 6 }} key={setIdx}>
                           <Paper
                             elevation={0}
                             sx={{
                               flex: 1,
                               display: 'flex',
                               flexDirection: 'column',
-                              borderRadius: 6,
+                              borderRadius: { xs: 4, md: 6 },
                               border: '1px solid',
                               borderColor: alpha(theme.palette.divider, 0.1),
                               bgcolor: alpha(theme.palette.background.paper, 0.6),
@@ -416,41 +430,41 @@ export default function EquipmentRecommendPage() {
                             }}
                           >
                             {/* 方案头部 */}
-                            <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: alpha(theme.palette.divider, 0.05), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <Stack direction="row" spacing={2} alignItems="center">
+                            <Box sx={{ p: { xs: 2, md: 3 }, borderBottom: '1px solid', borderColor: alpha(theme.palette.divider, 0.05), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <Stack direction="row" spacing={{ xs: 1.5, md: 2 }} alignItems="center">
                                 <Box sx={{
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius: 3,
+                                  width: { xs: 32, md: 40 },
+                                  height: { xs: 32, md: 40 },
+                                  borderRadius: { xs: 2, md: 3 },
                                   bgcolor: 'primary.main',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   color: 'white',
                                   fontWeight: 900,
-                                  fontSize: '18px',
+                                  fontSize: { xs: '14px', md: '18px' },
                                   boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.3)}`
                                 }}>
                                   {setIdx + 1}
                                 </Box>
                                 <Box>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.primary', lineHeight: 1.2 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '13px', md: '0.875rem' } }}>
                                     官方推荐方案
                                   </Typography>
-                                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: { xs: '10px', md: '0.75rem' } }}>
                                     Official Pro Set
                                   </Typography>
                                 </Box>
                               </Stack>
-                              <Box sx={{ px: 1.5, py: 0.5, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 2, border: '1px solid', borderColor: alpha(theme.palette.success.main, 0.2), display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ px: { xs: 1, md: 1.5 }, py: 0.5, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 2, border: '1px solid', borderColor: alpha(theme.palette.success.main, 0.2), display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main', animation: 'pulse 2s infinite' }} />
-                                <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 900 }}>同步中</Typography>
+                                <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 900, fontSize: { xs: '10px', md: '0.75rem' } }}>同步中</Typography>
                               </Box>
                             </Box>
 
                             {/* 装备列表区 */}
-                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
-                              <Box sx={{ bgcolor: alpha(theme.palette.action.hover, 0.03), borderRadius: 4, border: '1px solid', borderColor: alpha(theme.palette.divider, 0.05) }}>
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: { xs: 2, md: 4 }, overflow: 'hidden' }}>
+                              <Box sx={{ bgcolor: alpha(theme.palette.action.hover, 0.03), borderRadius: { xs: 3, md: 4 }, border: '1px solid', borderColor: alpha(theme.palette.divider, 0.05) }}>
                                 <EquipmentList
                                   onUpdateList={() => { }}
                                   list={set.items}
@@ -460,18 +474,18 @@ export default function EquipmentRecommendPage() {
 
                               {set.tips && (
                                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                                  <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1 }}>
+                                  <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1, mb: 0.5 }}>
                                     <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
-                                    <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 900, letterSpacing: '0.1em' }}>
+                                    <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 900, letterSpacing: '0.1em', fontSize: { xs: '10px', md: '0.75rem' } }}>
                                       思路分析
                                     </Typography>
                                   </Stack>
                                   <Box
                                     sx={{
                                       flex: 1,
-                                      p: 3,
+                                      p: { xs: 2, md: 3 },
                                       bgcolor: alpha(theme.palette.primary.main, 0.03),
-                                      borderRadius: 4,
+                                      borderRadius: { xs: 3, md: 4 },
                                       border: '1px solid',
                                       borderColor: alpha(theme.palette.primary.main, 0.1),
                                       overflowY: 'auto',
@@ -479,7 +493,7 @@ export default function EquipmentRecommendPage() {
                                       '&::-webkit-scrollbar-thumb': { bgcolor: alpha(theme.palette.primary.main, 0.2), borderRadius: '4px' }
                                     }}
                                   >
-                                    <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.8, fontStyle: 'italic', fontWeight: 500 }}>
+                                    <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.8, fontStyle: 'italic', fontWeight: 500, fontSize: { xs: '12px', md: '0.875rem' } }}>
                                       “{set.tips.replace('Tips：', '')}”
                                     </Typography>
                                   </Box>
@@ -534,18 +548,18 @@ export default function EquipmentRecommendPage() {
               </Box>
             ) : activeTab === 'skills' ? (
               <Box sx={{ flex: 1, overflowY: 'auto', px: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
-                <Grid container spacing={3} sx={{ maxWidth: 1000, mx: 'auto'}}>
+                <Grid container spacing={3} sx={{ maxWidth: 1000, mx: 'auto' }}>
                   {summonerSkills.map((skill, index) => (
                     <Grid size={{ xs: 12, md: 6 }} key={skill.name}>
                       <Paper
                         elevation={0}
                         sx={{
-                          p: 2,
+                          p: { xs: 1.5, md: 2 },
                           height: '100%',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 3,
-                          borderRadius: 6,
+                          gap: { xs: 2, md: 3 },
+                          borderRadius: { xs: 4, md: 6 },
                           border: '1px solid',
                           borderColor: alpha(theme.palette.divider, 0.1),
                           bgcolor: alpha(theme.palette.background.paper, 0.6),
@@ -564,19 +578,19 @@ export default function EquipmentRecommendPage() {
                             src={skill.icon}
                             variant="rounded"
                             sx={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: 4,
+                              width: { xs: 40, md: 48 },
+                              height: { xs: 40, md: 48 },
+                              borderRadius: { xs: 2, md: 4 },
                               boxShadow: `0 8px 16px ${alpha(theme.palette.common.black, 0.3)}`
                             }}
                           />
                           <Box sx={{ position: 'absolute', inset: 0, bgcolor: alpha(theme.palette.primary.main, 0.2), filter: 'blur(20px)', borderRadius: '50%', zIndex: -1 }} />
                         </Box>
                         <Box sx={{ flex: 1 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', mb: 0.5, tracking: '-0.01em' }}>
+                          <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', mb: 0.5, tracking: '-0.01em', fontSize: { xs: '14px', md: '1.125rem' } }}>
                             {skill.name}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontSize: { xs: '11px', md: '0.875rem' } }}>
                             {skill.description}
                           </Typography>
                         </Box>
@@ -588,8 +602,8 @@ export default function EquipmentRecommendPage() {
             ) : (
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {/* 搜索与分类区 */}
-                <Box sx={{ mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, shrink: 0 }}>
-                  <TextField
+                <Box sx={{ mb: { xs: 2, md: 4 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: { xs: 2, md: 3 }, shrink: 0 }}>
+                  <TextField  
                     fullWidth
                     placeholder="搜索局内道具..."
                     value={toolSearch}
@@ -597,7 +611,7 @@ export default function EquipmentRecommendPage() {
                     sx={{
                       maxWidth: 600,
                       '& .MuiOutlinedInput-root': {
-                        borderRadius: 4,
+                        borderRadius: { xs: 3, md: 4 },
                         bgcolor: alpha(theme.palette.background.paper, 0.6),
                         backdropFilter: 'blur(20px)',
                         transition: 'all 0.3s',
@@ -623,7 +637,7 @@ export default function EquipmentRecommendPage() {
                     }}
                   />
 
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'center', gap: 1.5 }}>
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'nowrap', overflowX: 'auto', width: '100%', justifyContent: { xs: 'flex-start', md: 'center' }, gap: 1, pb: { xs: 1, md: 0 }, '&::-webkit-scrollbar': { display: 'none' } }}>
                     {CATEGORIES.map(cat => {
                       const isActive = activeCategory === cat.id;
                       return (
@@ -632,10 +646,12 @@ export default function EquipmentRecommendPage() {
                           variant={isActive ? 'contained' : 'text'}
                           onClick={() => setActiveCategory(cat.id)}
                           sx={{
-                            borderRadius: 3,
-                            px: 3,
-                            py: 1,
+                            borderRadius: { xs: 2, md: 3 },
+                            px: { xs: 2, md: 3 },
+                            py: { xs: 0.5, md: 1 },
+                            minWidth: 'fit-content',
                             fontWeight: 800,
+                            fontSize: { xs: '12px', md: '0.875rem' },
                             color: isActive ? 'white' : 'text.secondary',
                             bgcolor: isActive ? 'primary.main' : alpha(theme.palette.action.hover, 0.05),
                             border: '1px solid',
@@ -661,11 +677,13 @@ export default function EquipmentRecommendPage() {
                       return (
                         <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2.4, xl: 2 }} key={tool.tool}>
                           <Tooltip
+                            disableHoverListener={isMobile}
+                            disableTouchListener={isMobile}
                             title={
-                              <Box 
+                              <Box
                                 sx={{
                                   p: 1.5,
-                                  maxWidth: 280,
+                                  maxWidth: { md: 280, xs: 240 },
                                   bgcolor: (theme) => alpha(theme.palette.background.paper, 0.8),
                                   backdropFilter: 'blur(12px)',
                                   borderRadius: 2,
@@ -712,26 +730,26 @@ export default function EquipmentRecommendPage() {
                           >
                             <Paper
                               elevation={0}
+                              onClick={() => isMobile && setSelectedToolForDetail({ ...tool, ...detail })}
                               sx={{
-                                p: 2,
-                                // ml: 10.5,
+                                p: { xs: 1.5, md: 2 },
                                 height: '100%',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
-                                gap: 2,
-                                borderRadius: 5,
+                                gap: { xs: 1, md: 2 },
+                                borderRadius: { xs: 3, md: 5 },
                                 border: '1px solid',
                                 borderColor: alpha(theme.palette.divider, 0.1),
                                 bgcolor: alpha(theme.palette.background.paper, 0.4),
                                 backdropFilter: 'blur(20px)',
-                                cursor: 'help',
+                                cursor: isMobile ? 'pointer' : 'help',
                                 transition: 'all 0.3s',
                                 animation: `fadeInUp 0.4s ease-out ${index * 0.01}s both`,
                                 '&:hover': {
                                   borderColor: 'primary.main',
                                   bgcolor: alpha(theme.palette.background.paper, 0.8),
-                                  transform: 'scale(1.05)',
+                                  transform: isMobile ? 'none' : 'scale(1.05)',
                                   boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.2)}`
                                 }
                               }}
@@ -740,14 +758,14 @@ export default function EquipmentRecommendPage() {
                                 src={tool.tool_src}
                                 variant="rounded"
                                 sx={{
-                                  width: 56,
-                                  height: 56,
-                                  borderRadius: 3,
+                                  width: { xs: 44, md: 56 },
+                                  height: { xs: 44, md: 56 },
+                                  borderRadius: { xs: 2, md: 3 },
                                   border: '1px solid',
                                   borderColor: alpha(theme.palette.divider, 0.1)
                                 }}
                               />
-                              <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.primary', textAlign: 'center' }}>
+                              <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.primary', textAlign: 'center', fontSize: { xs: '11px', md: '0.875rem' } }}>
                                 {tool.tool}
                               </Typography>
                             </Paper>
@@ -762,6 +780,103 @@ export default function EquipmentRecommendPage() {
           </Box>
         </Box>
       </Box>
+
+      {/* 道具详情弹窗 (移动端) */}
+      <Dialog
+        isOpen={!!selectedToolForDetail}
+        onClose={() => setSelectedToolForDetail(null)}
+        title="道具详情"
+        sx={{
+          maxWidth: '400px',
+          '& .MuiDialogContent-root': { p: 0 }
+        }}
+      >
+        {selectedToolForDetail && (
+          <Box sx={{ p: 3 }}>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+              <Avatar
+                src={selectedToolForDetail.tool_src}
+                variant="rounded"
+                sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 3,
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.divider, 0.1),
+                  boxShadow: `0 8px 16px ${alpha(theme.palette.common.black, 0.2)}`
+                }}
+              />
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', mb: 0.5 }}>
+                  {selectedToolForDetail.tool}
+                </Typography>
+                <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 900 }}>
+                  价格: {selectedToolForDetail.price}
+                </Typography>
+              </Box>
+            </Stack>
+
+            <Stack spacing={3}>
+              <Box>
+                <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 900, display: 'block', mb: 1, letterSpacing: '0.1em' }}>
+                  基础属性
+                </Typography>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    bgcolor: alpha(theme.palette.primary.main, 0.05),
+                    borderRadius: 3,
+                    border: '1px solid',
+                    borderColor: alpha(theme.palette.primary.main, 0.1)
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.6, fontWeight: 500 }}>
+                    {selectedToolForDetail.stats?.replace(/<[^>]+>/g, '') || '暂无属性数据'}
+                  </Typography>
+                </Paper>
+              </Box>
+
+              {selectedToolForDetail.passive && (
+                <Box>
+                  <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 900, display: 'block', mb: 1, letterSpacing: '0.1em' }}>
+                    被动/主动技能
+                  </Typography>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      bgcolor: alpha(theme.palette.success.main, 0.05),
+                      borderRadius: 3,
+                      border: '1px solid',
+                      borderColor: alpha(theme.palette.success.main, 0.1)
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.6, fontWeight: 500 }}>
+                      {selectedToolForDetail.passive?.replace(/<[^>]+>/g, '')}
+                    </Typography>
+                  </Paper>
+                </Box>
+              )}
+            </Stack>
+
+            <MuiButton
+              fullWidth
+              variant="contained"
+              onClick={() => setSelectedToolForDetail(null)}
+              sx={{
+                mt: 4,
+                py: 1.5,
+                borderRadius: 3,
+                fontWeight: 800,
+                boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.2)}`
+              }}
+            >
+              关闭详情
+            </MuiButton>
+          </Box>
+        )}
+      </Dialog>
     </Box>
   );
 }
