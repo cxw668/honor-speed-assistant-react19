@@ -9,7 +9,6 @@ import {
   useTheme, 
   alpha,
   Paper,
-  IconButton,
   Drawer,
   useMediaQuery,
   Fab
@@ -72,7 +71,7 @@ function heroQueryReducer(state: HeroQueryState, action: HeroQueryAction): HeroQ
   }
 }
 
-const FilterSidebar = ({ state, dispatch, total, typeCounts, theme, onClose }: any) => {
+const FilterSidebar = ({ state, dispatch, total, typeCounts, theme, onClose:_onClose }: any) => {
   const { selectedType, isNoviceOnly, searchQuery } = state;
   
   return (
